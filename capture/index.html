@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shoulder Kinematics Capture — Hoffer Transfer Protocol</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<style>
+  .hidden { display: none !important; }
+  .shell { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+  header.top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; }
+  header.top h1 { font-size: 22px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; letter-spacing: .06em; color: var(--slate); margin-bottom: 6px; text-transform: uppercase; }
+  select, input[type=range] { width: 100%; }
+  select { font-family: var(--font-mono); background: var(--ink); color: var(--paper); border: 1px solid var(--line); padding: 10px; border-radius: 4px; }
+  .capture-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
+  .video-wrap { position: relative; background: #000; border-radius: 6px; overflow: hidden; aspect-ratio: 4/3; }
+  video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  video { transform: scaleX(-1); }
+  canvas { transform: scaleX(-1); }
+  .instrument { padding: 18px; }
+  .instrument .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .instrument .k { color: var(--slate); }
+  .task-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding: 16px 18px; }
+  .modal { position: fixed; inset: 0; background: #0F1E27EE; display: flex; align-items: center; justify-content: center; z-index: 20; }
+  .modal .box { max-width: 420px; text-align: center; padding: 32px; }
+  .code { font-family: var(--font-mono); font-size: 32px; letter-spacing: .1em; color: var(--signal); margin: 18px 0; }
+  .summary-grid { display: grid; gap: 10px; text-align: center; padding: 40px; }
+  .big-score { font-family: var(--font-mono); font-size: 64px; color: var(--signal); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div>
+      <div class="eyebrow"><a href="../index.html" style="color:inherit;">← Home</a> · OBPP · Hoffer Tendon Transfer Protocol</div>
+      <h1>Shoulder Kinematics Capture</h1>
+    </div>
+    <div id="bootStatus" class="readout flag">loading pose model…</div>
+  </header>
+
+  <p style="margin-bottom:16px;">🌐 <a href="tutorial/index.html">New here? Watch a how-to video in your language →</a></p>
+
+  <section id="setupScreen" class="panel" style="padding:24px;">
+    <div class="field">
+      <label>Patient hospital ID (7 digits)</label>
+      <input type="text" id="hospitalId" placeholder="e.g. 1234567" inputmode="numeric" pattern="\d{7}" maxlength="7" />
+    </div>
+    <div class="field">
+      <label>Patient label / study ID</label>
+      <input type="text" id="patientLabel" placeholder="e.g. OBPP-014" />
+    </div>
+    <div class="field">
+      <label>Side under test</label>
+      <select id="sideSelect"><option value="right">Right (surgical side)</option><option value="left">Left</option></select>
+    </div>
+    <div class="field">
+      <label>Recovery stage (0 = early post-op · 1 = long-term follow-up)</label>
+      <input type="range" id="stageSlider" min="0" max="1" step="0.05" value="0.5" />
+    </div>
+    <button class="btn primary" id="startSessionBtn">Begin session</button>
+  </section>
+
+  <div id="accessCodeModal" class="modal hidden">
+    <div class="box panel">
+      <div class="eyebrow">Hospital ID (session ID)</div>
+      <div class="code" id="sessionIdDisplay" style="font-size:15px; word-break:break-all;">—</div>
+      <button class="btn" id="copySessionIdBtn" style="margin-bottom:18px;">Copy hospital ID</button>
+      <div class="eyebrow">Doctor access code</div>
+      <div class="code" id="codeDisplay">— — — —</div>
+      <button class="btn" id="copyCodeBtn" style="margin-bottom:18px;">Copy access code</button>
+      <p style="color:var(--slate); font-size:13px;">The reviewing clinician opens this session in the doctor portal using the hospital ID and the access code.</p>
+      <button class="btn primary" id="continueBtn">I've saved them — continue</button>
+    </div>
+  </div>
+
+  <section id="captureScreen" class="hidden">
+    <div class="capture-grid">
+      <div class="video-wrap panel">
+        <video id="video" muted playsinline></video>
+        <canvas id="overlay"></canvas>
+      </div>
+      <div class="instrument panel">
+        <div class="eyebrow" style="margin-bottom:10px;">Live readout</div>
+        <div id="readout"></div>
+      </div>
+    </div>
+
+    <div class="task-bar panel">
+      <div>
+        <div class="eyebrow" id="taskProgress">STEP 1 / 4</div>
+        <h3 id="taskLabel">—</h3>
+        <p id="taskInstruction" style="color:var(--slate); font-size:13px; max-width:520px;"></p>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <span id="taskDoneFlag" class="flag"></span>
+        <button class="btn" id="toggleCameraBtn">Flip camera (<span id="facingLabel">FRONT</span>)</button>
+        <button class="btn primary" id="startTaskBtn">Start task</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="summaryScreen" class="hidden panel summary-grid">
+    <div class="eyebrow">Session complete</div>
+    <div class="big-score" id="compositeScore">—</div>
+    <div id="compositeCi" class="readout"></div>
+    <div id="completeness" class="readout" style="color:var(--slate);"></div>
+    <div id="thetaVersion" class="readout" style="color:var(--slate); font-size:12px;"></div>
+    <p style="color:var(--slate); font-size:13px;">Photos and full parameter data are stored locally and can be reviewed in the doctor portal using the access code shown earlier.</p>
+    <a class="btn primary" href="../index.html" style="justify-self:center;">Return to home</a>
+  </section>
+</div>
+
+<script type="module">
+  import { FilesetResolver, PoseLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+  window.MediapipeTasksVision = { FilesetResolver, PoseLandmarker };
+</script>
+<script src="../shared/theta-engine.js"></script>
+<script src="../shared/config.js"></script>
+<script src="../shared/api-storage.js"></script>
+<script src="pose-engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

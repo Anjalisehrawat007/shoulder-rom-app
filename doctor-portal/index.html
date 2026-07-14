@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Doctor Portal — Shoulder Kinematics Review</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<style>
+  .hidden { display: none !important; }
+  .shell { max-width: 1000px; margin: 0 auto; padding: 32px 20px 64px; }
+  .lock { max-width: 420px; margin: 80px auto; padding: 32px; text-align: center; }
+  .lock input { width: 100%; margin: 10px 0; text-align: center; font-size: 18px; }
+  .task-card { padding: 18px; margin-bottom: 16px; }
+  .thumbs { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+  .thumbs img { width: 120px; height: 90px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); cursor: pointer; }
+  .params-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .params-table td { padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  .params-table td:first-child { color: var(--slate); }
+  .lightbox { position: fixed; inset: 0; background: #000000DD; display: flex; align-items: center; justify-content: center; z-index: 30; }
+  .lightbox img { max-width: 90%; max-height: 90%; border-radius: 6px; }
+  .score-banner { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; margin-bottom: 20px; }
+  .score-banner .big { font-family: var(--font-mono); font-size: 40px; color: var(--signal); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header style="margin-bottom: 24px;">
+    <div class="eyebrow"><a href="../index.html" style="color:inherit;">← Home</a> · OBPP · Hoffer Tendon Transfer Protocol</div>
+    <h1>Doctor Review Portal</h1>
+  </header>
+
+  <div id="lockScreen" class="panel lock">
+    <div class="eyebrow">Session access</div>
+    <p style="color: var(--slate); font-size: 13px;">Enter the patient's hospital ID and access code provided at capture time.</p>
+    <input type="text" id="sessionIdInput" placeholder="hospital ID, e.g. 1234567" inputmode="numeric" maxlength="7" />
+    <input type="text" id="codeInput" placeholder="ACCESS-CODE" />
+    <button class="btn primary" id="unlockBtn" style="width:100%; margin-top:10px;">Unlock session</button>
+    <p id="unlockError" class="flag" style="margin-top:10px;"></p>
+  </div>
+
+  <div id="viewScreen" class="hidden">
+    <div class="panel score-banner">
+      <div>
+        <div class="eyebrow" id="patientLabel">—</div>
+        <div style="color:var(--slate); font-size:13px;" id="sessionMeta">—</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="big" id="compositeScore">—</div>
+        <div class="readout" id="compositeCi" style="font-size:12px; color:var(--slate);"></div>
+      </div>
+    </div>
+    <div id="taskCards"></div>
+  </div>
+</div>
+
+<div id="lightbox" class="lightbox hidden"><img id="lightboxImg" /></div>
+
+<script src="../shared/config.js"></script>
+<script src="../shared/api-storage.js"></script>
+<script src="portal.js"></script>
+</body>
+</html>

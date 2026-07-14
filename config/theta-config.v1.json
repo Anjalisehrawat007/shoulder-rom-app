@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "label": "Initial Hoffer-transfer weighting, fitted on pilot cohort",
+  "created_at": "2026-07-10",
+  "notes": "early = weight while stage01 -> 0 (early post-op protection phase). late = weight while stage01 -> 1 (functional independence phase). Re-fitting on new cohort data must publish a new version, e.g. 1.1.0, never overwrite this file.",
+  "sigmoid": {
+    "midpoint": 0.5,
+    "steepness": 8
+  },
+  "domains": {
+    "shoulder_abduction": { "early": 0.22, "late": 0.14 },
+    "shoulder_flexion": { "early": 0.18, "late": 0.12 },
+    "external_rotation": { "early": 0.20, "late": 0.10 },
+    "internal_rotation": { "early": 0.08, "late": 0.08 },
+    "scapular_upward_rotation": { "early": 0.10, "late": 0.08 },
+    "scapular_tilt": { "early": 0.06, "late": 0.06 },
+    "scapular_winging": { "early": 0.06, "late": 0.06 },
+    "trunk_compensation": { "early": 0.06, "late": 0.16 },
+    "movement_smoothness": { "early": 0.04, "late": 0.20 }
+  },
+  "confidence": {
+    "z": 1.96,
+    "kVariance": 1.0,
+    "kCompleteness": 12
+  }
+}

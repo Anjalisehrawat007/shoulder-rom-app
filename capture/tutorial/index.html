@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How to use this app — Shoulder Kinematics Capture</title>
+<link rel="stylesheet" href="../../shared/style.css" />
+<style>
+  .hidden { display: none !important; }
+  .shell { max-width: 640px; margin: 0 auto; padding: 32px 20px 64px; }
+  header.top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; gap: 12px; flex-wrap: wrap; }
+  header.top h1 { font-size: 20px; }
+  .lang-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 20px; }
+  .lang-btn { display: flex; align-items: center; gap: 10px; padding: 16px; text-align: left; font-size: 16px; }
+  .lang-btn .flag { font-size: 22px; }
+  .lang-btn .native { font-size: 16px; color: var(--paper); }
+  .lang-btn .romanized { display: block; font-size: 11px; color: var(--slate); margin-top: 2px; }
+  .lang-btn .voice-badge { margin-left: auto; font-size: 14px; }
+  .walk-card { padding: 40px 32px; text-align: center; }
+  .step-icon { font-size: 64px; margin: 8px 0 20px; }
+  .step-caption { font-size: 20px; line-height: 1.7; min-height: 3.4em; }
+  .walk-toolbar { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; gap: 10px; flex-wrap: wrap; }
+  .step-dots { display: flex; justify-content: center; gap: 6px; margin-top: 18px; }
+  .step-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+  .step-dots span.active { background: var(--signal); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div>
+      <div class="eyebrow">OBPP · Hoffer Tendon Transfer Protocol</div>
+      <h1>How to use this app</h1>
+    </div>
+    <a class="btn" href="../index.html">Skip → go to app</a>
+  </header>
+
+  <section id="langScreen">
+    <p style="color:var(--slate); font-size:14px;">🌐 Select your language for a short spoken walkthrough of the app.</p>
+    <p style="color:var(--slate); font-size:12px;">🔊 = narration available on this device · 🔇 = no voice installed, captions only</p>
+    <div class="lang-grid" id="langGrid"></div>
+    <details style="margin-top:20px; color:var(--slate); font-size:12px;">
+      <summary style="cursor:pointer; color:var(--signal);">Missing a language? How to add more voices to this device</summary>
+      <div style="margin-top:10px; line-height:1.6;">
+        <strong>macOS:</strong> System Settings → Accessibility → Spoken Content → System Voice → Manage Voices → download the needed language.<br />
+        <strong>Windows:</strong> Settings → Time &amp; Language → Speech → Manage voices → Add voices.<br />
+        <strong>Android:</strong> Settings → System → Languages &amp; input → Text-to-speech output → Google TTS → Install voice data.<br />
+        <strong>iOS/iPadOS:</strong> Settings → Accessibility → Spoken Content → Voices → download the needed language.<br />
+        Once installed at the OS level, the browser picks it up automatically — no changes needed here.
+      </div>
+    </details>
+  </section>
+
+  <section id="walkScreen" class="hidden">
+    <div class="panel walk-card">
+      <div class="eyebrow" id="stepProgress">STEP 1 / 7</div>
+      <div class="step-icon" id="stepIcon">👋</div>
+      <p class="step-caption" id="stepCaption"></p>
+      <p id="voiceNote" class="flag hidden"></p>
+      <div class="step-dots" id="stepDots"></div>
+    </div>
+    <div class="walk-toolbar">
+      <button class="btn" id="changeLangBtn">🌐 Change language</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn hidden" id="cycleVoiceBtn">🔁 Clearer voice</button>
+        <button class="btn" id="replayBtn">🔊 Replay</button>
+        <button class="btn" id="prevBtn">← Back</button>
+        <button class="btn primary" id="nextBtn">Next →</button>
+      </div>
+    </div>
+    <div id="finishBar" class="hidden" style="text-align:center; margin-top:22px;">
+      <a class="btn primary" href="../index.html">Continue to the app →</a>
+    </div>
+  </section>
+</div>
+
+<script src="tutorial.js"></script>
+</body>
+</html>

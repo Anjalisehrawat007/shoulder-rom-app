@@ -1,0 +1,7 @@
+backend/node_modules/
+backend/data/*.sqlite
+backend/data/*.sqlite-*
+backend/data/captures/
+.DS_Store
+**/.DS_Store
+node_modules/

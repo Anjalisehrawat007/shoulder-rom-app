@@ -1,0 +1,96 @@
+/* ----------------------------------------------------------------------------
+   Visual identity: "clinical instrument" — the capture screen should feel like
+   a piece of measurement equipment, not a social camera app. Ink-navy ground,
+   a single desaturated teal for live signal, amber reserved only for things
+   that need the clinician's eyes (flags, low confidence). Numbers are set in
+   a monospace so they read like a readout, not body copy.
+---------------------------------------------------------------------------- */
+:root {
+  --ink: #0F1E27;
+  --ink-2: #16303D;
+  --paper: #F6F4EF;
+  --signal: #2FA8A0;
+  --signal-dim: #2FA8A033;
+  --amber: #E0A339;
+  --slate: #7C8B93;
+  --line: #24404F;
+  --font-display: "Newsreader", "Iowan Old Style", serif;
+  --font-ui: "Inter", -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; min-height: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--signal);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0;
+}
+
+.readout {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.panel {
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.btn {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 18px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--paper);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.btn:hover { border-color: var(--signal); }
+.btn.primary {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--ink);
+}
+.btn.primary:hover { background: #38bdb4; }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.flag {
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+::selection { background: var(--signal-dim); }
+
+a { color: var(--signal); }
+
+input[type="text"] {
+  font-family: var(--font-mono);
+  background: var(--ink);
+  border: 1px solid var(--line);
+  color: var(--paper);
+  padding: 10px 12px;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+}

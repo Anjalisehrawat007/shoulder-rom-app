@@ -1,0 +1,18 @@
+[build]
+  publish = "."
+  command = "true"
+
+[[headers]]
+  for = "/capture/*.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/doctor-portal/*.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/shared/*.js"
+  [headers.values]
+    Cache-Control = "no-cache"

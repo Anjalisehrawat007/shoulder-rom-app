@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shoulder Kinematics — Hoffer Transfer Protocol</title>
+<link rel="stylesheet" href="shared/style.css" />
+<style>
+  .shell { max-width: 720px; margin: 0 auto; padding: 60px 20px; }
+  header.top { margin-bottom: 36px; }
+  header.top h1 { font-size: 24px; margin-top: 4px; }
+  .links { display: grid; gap: 18px; margin-top: 24px; }
+  .card { padding: 24px; display: block; text-decoration: none; }
+  .card h2 { font-size: 17px; color: var(--signal); margin-bottom: 6px; }
+  .card p { color: var(--slate); font-size: 13px; line-height: 1.5; }
+  #backendStatus { margin-top: 28px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="eyebrow">OBPP · Hoffer Tendon Transfer Protocol</div>
+    <h1>Shoulder Kinematics Capture</h1>
+  </header>
+
+  <div class="links">
+    <a class="card panel" href="capture/index.html">
+      <h2>Capture app →</h2>
+      <p>Patient-facing camera app. Guides the child through the four standardized tasks and computes the kinematic parameter set live.</p>
+    </a>
+    <a class="card panel" href="doctor-portal/index.html">
+      <h2>Doctor portal →</h2>
+      <p>Access-code-gated viewer. Enter a session ID and access code to review captured photos, parameters, and the composite recovery score.</p>
+    </a>
+    <a class="card panel" href="capture/tutorial/index.html">
+      <h2>🌐 How to use this app →</h2>
+      <p>Patient how-to video in your language, before starting a capture session.</p>
+    </a>
+  </div>
+
+  <div id="backendStatus" class="readout flag">checking backend…</div>
+</div>
+
+<script src="shared/config.js"></script>
+<script>
+  fetch(`${BACKEND_URL}/api/health`)
+    .then((r) => (r.ok ? document.getElementById("backendStatus").textContent = "backend connected · " + BACKEND_URL
+                        : Promise.reject()))
+    .catch(() => {
+      document.getElementById("backendStatus").textContent =
+        "backend unreachable — start it with `npm start` in /backend";
+    });
+</script>
+</body>
+</html>
