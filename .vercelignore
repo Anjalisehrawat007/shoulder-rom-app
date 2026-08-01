@@ -1,0 +1,8 @@
+backend/
+scripts/
+docs/
+node_modules/
+.git/
+.netlify/
+README.md
+render.yaml
