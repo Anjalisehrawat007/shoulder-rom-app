@@ -301,6 +301,50 @@ async function main() {
     const unlock = await json("POST", `/api/sessions/${sessionId}/unlock`, { accessCode: createSession.data.accessCode });
     assertTrue("regression: the original per-patient unlock flow still works unchanged", unlock.status === 200 && unlock.data.taskResults.global_abduction.parameters.shoulderAbductionDeg.value === 62);
 
+    // ---- 14. Access code generation ------------------------------------------
+    // newAccessCode() returned a hardcoded "12345" for every session, so one
+    // guessed code plus an enumerable 7-digit hospital id opened any patient's
+    // record. These checks fail against that implementation and pass against
+    // the CSPRNG one.
+    const codeSessions = [];
+    for (let i = 0; i < 25; i += 1) {
+      const created = await json("POST", "/api/sessions", {
+        sessionId: String(3000000 + i),
+        patientLabel: `code-entropy-${i}`,
+        side: "right",
+        asriVersion: "2.0.0",
+        referenceDatasetVersion: "1.0.0",
+        stage01: 0.5,
+        protocol: "modified_mallet",
+      });
+      codeSessions.push({ sessionId: String(3000000 + i), accessCode: created.data.accessCode });
+    }
+    const codes = codeSessions.map((s) => s.accessCode);
+
+    assertTrue("access code: never the old hardcoded constant", codes.every((c) => c !== "12345"));
+    assertTrue("access code: exactly 8 digits, no leading zero", codes.every((c) => /^[1-9]\d{7}$/.test(c)));
+    assertTrue("access code: unique across 25 consecutive sessions", new Set(codes).size === codes.length);
+    // A constant generator collapses to one distinct first digit; a uniform one
+    // spreads across 1-9. Cheap distribution smoke test, not a randomness proof.
+    assertTrue("access code: first digit varies (not a constant generator)", new Set(codes.map((c) => c[0])).size >= 3);
+
+    // Unique codes are worthless if the wrong one still unlocks, or if the
+    // right one stops working.
+    const probe = codeSessions[0];
+    const goodUnlock = await json("POST", `/api/sessions/${probe.sessionId}/unlock`, { accessCode: probe.accessCode });
+    assertTrue("access code: the freshly generated code unlocks its own session", goodUnlock.status === 200);
+
+    const staleUnlock = await json("POST", `/api/sessions/${probe.sessionId}/unlock`, { accessCode: "12345" });
+    assertTrue("access code: the old hardcoded code no longer unlocks anything", staleUnlock.status === 401);
+
+    const crossUnlock = await json("POST", `/api/sessions/${probe.sessionId}/unlock`, { accessCode: codeSessions[1].accessCode });
+    assertTrue("access code: another session's code does not unlock this one", crossUnlock.status === 401);
+
+    // trim()/toUpperCase() normalization at the unlock site must stay a no-op
+    // for digits, otherwise the store and verify sides silently disagree.
+    const paddedUnlock = await json("POST", `/api/sessions/${probe.sessionId}/unlock`, { accessCode: `  ${probe.accessCode}  ` });
+    assertTrue("access code: surrounding whitespace is tolerated by unlock", paddedUnlock.status === 200);
+
     console.log(`\n${failures === 0 ? "ALL CHECKS PASSED" : `${failures} CHECK(S) FAILED`}`);
   } finally {
     child.kill();

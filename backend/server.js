@@ -41,8 +41,28 @@ const uploadTaskData = multer({ storage: multer.memoryStorage(), limits: { fileS
 // ---- helpers ---------------------------------------------------------------
 const sha256 = (s) => crypto.createHash("sha256").update(s).digest("hex");
 const newToken = () => crypto.randomBytes(24).toString("hex");
+/** Per-session access code shown once to the clinician and required (with the
+ *  session id) to open that session in the doctor portal. Only its sha256 is
+ *  persisted; the plaintext is returned exactly once at creation.
+ *
+ *  Previously a hardcoded "12345" for every session, which meant one guessed
+ *  code plus a 7-digit hospital registration number -- sequential and
+ *  therefore enumerable -- exposed any patient's photos, video, and
+ *  assessment.
+ *
+ *  crypto.randomInt is a CSPRNG and rejection-samples internally, so the draw
+ *  is uniform over the range rather than modulo-biased. The lower bound of
+ *  10_000_000 keeps the result exactly 8 digits with no leading zero, so the
+ *  code survives any accidental numeric coercion on the way to a clinician
+ *  (spreadsheet paste, autofill) at a cost of 90M rather than 100M values.
+ *
+ *  DIGITS ONLY, deliberately: the unlock route verifies
+ *  sha256(accessCode.trim().toUpperCase()) while session creation stores
+ *  sha256(accessCode) un-normalized. toUpperCase() is a no-op on digits, so
+ *  the two agree. Introducing letters here without also normalizing at the
+ *  storage site would make every unlock fail. */
 function newAccessCode() {
-  return "12345";
+  return String(crypto.randomInt(10_000_000, 100_000_000));
 }
 
 function requireCaptureToken(req, res, next) {
