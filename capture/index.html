@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Shoulder Kinematics Capture — Hoffer Transfer Protocol</title>
+<title>Shoulder Kinematics Capture — Modified Mallet Protocol</title>
 <link rel="stylesheet" href="../shared/style.css" />
 <style>
   .hidden { display: none !important; }
@@ -20,21 +20,51 @@
   video { transform: scaleX(-1); }
   canvas { transform: scaleX(-1); }
   .instrument { padding: 18px; }
-  .instrument .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
-  .instrument .k { color: var(--slate); }
-  .task-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding: 16px 18px; }
+  .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .k { color: var(--slate); }
+  .task-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding: 16px 18px; flex-wrap: wrap; gap: 10px; }
   .modal { position: fixed; inset: 0; background: #0F1E27EE; display: flex; align-items: center; justify-content: center; z-index: 20; }
   .modal .box { max-width: 420px; text-align: center; padding: 32px; }
   .code { font-family: var(--font-mono); font-size: 32px; letter-spacing: .1em; color: var(--signal); margin: 18px 0; }
   .summary-grid { display: grid; gap: 10px; text-align: center; padding: 40px; }
   .big-score { font-family: var(--font-mono); font-size: 64px; color: var(--signal); }
+  .icqa-panel { margin-top: 14px; padding: 16px 18px; }
+  .icqa-panel.gate-blocked { border-color: var(--amber); }
+  .icqa-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .icqa-score { font-family: var(--font-mono); font-size: 22px; color: var(--signal); }
+  .icqa-panel.gate-blocked .icqa-score { color: var(--amber); }
+  .icqa-primary { font-size: 14px; margin: 8px 0 4px; }
+  .icqa-secondary { font-size: 12px; color: var(--slate); margin: 0 0 10px 18px; padding: 0; }
+  .icqa-subscores { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 2px 14px; margin-top: 8px; }
+  .icqa-actions { display: flex; gap: 10px; margin-top: 10px; }
+  #recordingPauseFlag.flag { display: block; margin-top: 8px; }
+
+  /* Phase 6: Modified Mallet workflow screens */
+  .step-progress { font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; color: var(--slate); margin-bottom: 6px; }
+  .protocol-card { padding: 24px; text-align: center; }
+  .protocol-card h2 { margin-bottom: 6px; }
+  .task-info { padding: 18px 20px; margin-bottom: 14px; }
+  .clinical-purpose { color: var(--slate); font-size: 12px; margin: 4px 0 12px; }
+  .task-media-placeholders { display: flex; gap: 10px; margin: 10px 0; }
+  .media-placeholder { flex: 1; border: 1px dashed var(--line); border-radius: 6px; padding: 18px 10px; text-align: center; font-size: 12px; color: var(--slate); }
+  .task-instruction-text { font-size: 15px; margin: 8px 0 10px; }
+  .live-metrics { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--slate); }
+  .live-metrics b { color: var(--paper); font-family: var(--font-mono); }
+  .countdown-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #0F1E27AA; font-family: var(--font-mono); font-size: 96px; color: var(--signal); z-index: 5; }
+  .countdown-overlay.hidden { display: none; }
+  .task-review { padding: 20px; margin-top: 14px; }
+  .task-review .grade-badge { font-family: var(--font-mono); font-size: 40px; color: var(--signal); }
+  .review-actions { display: flex; gap: 10px; margin-top: 14px; }
+  .resume-banner { padding: 16px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .report-links { display: flex; gap: 10px; justify-content: center; margin-top: 6px; }
+  .mallet-overall { display: grid; gap: 4px; margin: 10px 0; }
 </style>
 </head>
 <body>
 <div class="shell">
   <header class="top">
     <div>
-      <div class="eyebrow"><a href="../index.html" style="color:inherit;">← Home</a> · OBPP · Hoffer Tendon Transfer Protocol</div>
+      <div class="eyebrow"><a href="../index.html" style="color:inherit;">← Home</a> · OBPP · Modified Mallet Protocol</div>
       <h1>Shoulder Kinematics Capture</h1>
     </div>
     <div id="bootStatus" class="readout flag">loading pose model…</div>
@@ -42,7 +72,19 @@
 
   <p style="margin-bottom:16px;">🌐 <a href="tutorial/index.html">New here? Watch a how-to video in your language →</a></p>
 
-  <section id="setupScreen" class="panel" style="padding:24px;">
+  <div id="resumeBanner" class="panel resume-banner hidden">
+    <div>
+      <div class="eyebrow">In-progress assessment found</div>
+      <p style="color:var(--slate); font-size:13px; margin-top:4px;" id="resumeSummaryText"></p>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn" id="discardResumeBtn">Start new instead</button>
+      <button class="btn primary" id="resumeBtn">Resume assessment</button>
+    </div>
+  </div>
+
+  <section id="registrationScreen" class="panel" style="padding:24px;">
+    <div class="step-progress">STEP 1 · PATIENT REGISTRATION</div>
     <div class="field">
       <label>Patient hospital ID (7 digits)</label>
       <input type="text" id="hospitalId" placeholder="e.g. 1234567" inputmode="numeric" pattern="\d{7}" maxlength="7" />
@@ -59,7 +101,15 @@
       <label>Recovery stage (0 = early post-op · 1 = long-term follow-up)</label>
       <input type="range" id="stageSlider" min="0" max="1" step="0.05" value="0.5" />
     </div>
-    <button class="btn primary" id="startSessionBtn">Begin session</button>
+    <div class="field">
+      <label>Patient age in months (optional — selects the applicable reference targets)</label>
+      <input type="text" id="ageMonths" placeholder="e.g. 18" inputmode="numeric" />
+    </div>
+    <div class="field">
+      <label>Months since surgery (optional — selects the applicable reference targets)</label>
+      <input type="text" id="monthsSinceSurgery" placeholder="e.g. 2" inputmode="numeric" />
+    </div>
+    <button class="btn primary" id="startSessionBtn">Continue to assessment selection</button>
   </section>
 
   <div id="accessCodeModal" class="modal hidden">
@@ -75,23 +125,55 @@
     </div>
   </div>
 
+  <section id="assessmentSelectionScreen" class="hidden">
+    <div class="step-progress">STEP 2 · ASSESSMENT SELECTION</div>
+    <div class="panel protocol-card">
+      <h2>Modified Mallet Assessment</h2>
+      <p style="color:var(--slate); font-size:13px; max-width:480px; margin:0 auto 16px;">
+        A 6-task guided clinical examination for postoperative OBPP shoulder function
+        (Global Abduction, Global External Rotation, Hand to Neck, Hand to Spine,
+        Hand to Mouth, Internal Rotation). Each task is automatically graded I-V with
+        a full explanation, alongside ASRI and DMQE motion-quality analysis.
+      </p>
+      <button class="btn primary" id="beginAssessmentBtn">Begin assessment</button>
+    </div>
+  </section>
+
   <section id="captureScreen" class="hidden">
+    <div class="step-progress" id="taskProgress">STEP 3 · MODIFIED MALLET ASSESSMENT — TASK 1 / 6</div>
+
+    <div class="panel task-info">
+      <h2 id="taskLabel">—</h2>
+      <p class="clinical-purpose" id="taskClinicalPurpose"></p>
+      <div class="task-media-placeholders">
+        <div class="media-placeholder" id="demoVideoPlaceholder">📹 Video demonstration<br />(coming soon)</div>
+        <div class="media-placeholder" id="illustrationPlaceholder">🖼️ Illustration<br />(coming soon)</div>
+      </div>
+      <p class="task-instruction-text" id="taskInstruction"></p>
+      <button class="btn" id="speakInstructionBtn">🔊 Read instructions aloud</button>
+    </div>
+
     <div class="capture-grid">
       <div class="video-wrap panel">
         <video id="video" muted playsinline></video>
         <canvas id="overlay"></canvas>
+        <div id="countdownOverlay" class="countdown-overlay hidden">3</div>
       </div>
       <div class="instrument panel">
-        <div class="eyebrow" style="margin-bottom:10px;">Live readout</div>
+        <div class="eyebrow" style="margin-bottom:2px;">Live readout</div>
+        <div style="color:var(--slate); font-size:11px; margin-bottom:10px;">[M] measured · [E] estimated · [U] unavailable</div>
         <div id="readout"></div>
       </div>
     </div>
 
     <div class="task-bar panel">
       <div>
-        <div class="eyebrow" id="taskProgress">STEP 1 / 4</div>
-        <h3 id="taskLabel">—</h3>
-        <p id="taskInstruction" style="color:var(--slate); font-size:13px; max-width:520px;"></p>
+        <div class="live-metrics">
+          <span>Landmark confidence: <b id="liveLandmarkConfidence">—</b></span>
+          <span>Live CQI: <b id="liveCqiReadout">—</b></span>
+          <span id="recordingTimerWrap" class="hidden">Recording: <b id="recordingTimer">0.0s</b></span>
+        </div>
+        <p id="recordingPauseFlag" class="flag hidden"></p>
       </div>
       <div style="display:flex; gap:10px; align-items:center;">
         <span id="taskDoneFlag" class="flag"></span>
@@ -99,15 +181,56 @@
         <button class="btn primary" id="startTaskBtn">Start task</button>
       </div>
     </div>
+
+    <div id="cameraCheckPanel" class="panel icqa-panel">
+      <div class="icqa-header">
+        <div class="eyebrow">Camera check · Capture Quality Index</div>
+        <div class="icqa-score" id="icqaScore">—</div>
+      </div>
+      <p class="icqa-primary" id="icqaPrimaryGuidance">Checking your camera setup…</p>
+      <ul class="icqa-secondary" id="icqaSecondaryGuidance"></ul>
+      <div class="icqa-subscores" id="icqaSubscores"></div>
+      <div class="icqa-actions">
+        <button class="btn" id="recheckBtn">Re-check</button>
+        <button class="btn hidden" id="startAnywayBtn" title="Records anyway despite the flagged issues above — this is saved with the result so it can be reviewed later.">Start anyway</button>
+      </div>
+    </div>
+
+    <div id="taskReviewPanel" class="panel task-review hidden">
+      <div class="eyebrow">Task Review</div>
+      <div style="display:flex; align-items:center; gap:16px; margin:10px 0;">
+        <div class="grade-badge" id="reviewGrade">—</div>
+        <div>
+          <div class="readout" id="reviewConfidence" style="color:var(--slate);"></div>
+          <div class="readout" id="reviewCqi" style="color:var(--slate);"></div>
+        </div>
+      </div>
+      <p id="reviewReasoning" style="font-size:13px;"></p>
+      <div class="review-actions">
+        <button class="btn" id="retryTaskBtn">Retry this task</button>
+        <button class="btn primary" id="continueToNextTaskBtn">Continue</button>
+      </div>
+    </div>
   </section>
 
   <section id="summaryScreen" class="hidden panel summary-grid">
-    <div class="eyebrow">Session complete</div>
+    <div class="step-progress">ASSESSMENT SUMMARY</div>
+    <div class="eyebrow">AI-Assisted Modified Mallet Score</div>
+    <div class="mallet-overall" id="malletOverallSummary"></div>
+
+    <div class="eyebrow" style="margin-top:14px;">ASRI (Adaptive Shoulder Recovery Index)</div>
     <div class="big-score" id="compositeScore">—</div>
     <div id="compositeCi" class="readout"></div>
-    <div id="completeness" class="readout" style="color:var(--slate);"></div>
-    <div id="thetaVersion" class="readout" style="color:var(--slate); font-size:12px;"></div>
-    <p style="color:var(--slate); font-size:13px;">Photos and full parameter data are stored locally and can be reviewed in the doctor portal using the access code shown earlier.</p>
+    <div id="overallConfidence" class="readout" style="color:var(--slate);"></div>
+    <div id="categoryBreakdown" style="text-align:left; max-width:340px; margin:10px auto 0;"></div>
+    <div id="completeness" class="readout" style="color:var(--slate); margin-top:10px;"></div>
+    <div id="asriVersion" class="readout" style="color:var(--slate); font-size:12px;"></div>
+
+    <p style="color:var(--slate); font-size:13px;">Full parameter data, DMQE motion analysis, capture quality, and Mallet grades are stored and can be reviewed (or overridden by a clinician) in the doctor portal using the access code shown earlier.</p>
+    <div class="report-links">
+      <a class="btn" id="downloadJsonReportBtn" href="#" target="_blank">Download JSON report</a>
+      <a class="btn" id="downloadPdfReportBtn" href="#" target="_blank">Download PDF report</a>
+    </div>
     <a class="btn primary" href="../index.html" style="justify-self:center;">Return to home</a>
   </section>
 </div>
@@ -116,10 +239,8 @@
   import { FilesetResolver, PoseLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
   window.MediapipeTasksVision = { FilesetResolver, PoseLandmarker };
 </script>
-<script src="../shared/theta-engine.js"></script>
 <script src="../shared/config.js"></script>
 <script src="../shared/api-storage.js"></script>
-<script src="pose-engine.js"></script>
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

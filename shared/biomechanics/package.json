@@ -1,0 +1,6 @@
+{
+  "name": "shoulder-rom-biomechanics",
+  "private": true,
+  "type": "module",
+  "description": "Scopes ES module resolution to this directory only (Node resolves module type via the nearest package.json). backend/ keeps its own package.json with type=commonjs; browsers ignore this file entirely and use each <script type=\"module\"> tag instead."
+}

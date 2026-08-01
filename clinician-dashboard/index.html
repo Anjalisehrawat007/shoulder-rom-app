@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clinician Dashboard — Shoulder Kinematics Research Platform</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<style>
+  .hidden { display: none !important; }
+  .shell { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+  .lock { max-width: 420px; margin: 80px auto; padding: 32px; text-align: center; }
+  .lock input { width: 100%; margin: 10px 0; text-align: center; font-size: 18px; }
+  .reviewer-picker { max-width: 420px; margin: 80px auto; padding: 32px; text-align: center; }
+  .reviewer-picker select, .reviewer-picker input { width: 100%; margin: 10px 0; text-align: center; }
+  .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 12px; color: var(--slate); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header style="margin-bottom: 12px;">
+    <div class="eyebrow"><a href="../index.html" style="color:inherit;">← Home</a> · OBPP · Hoffer Tendon Transfer Protocol</div>
+    <h1>Clinician Dashboard</h1>
+  </header>
+
+  <div id="loginScreen" class="panel lock">
+    <div class="eyebrow">Dashboard access</div>
+    <p style="color: var(--slate); font-size: 13px;">Enter the clinic's dashboard passcode to review patient assessments.</p>
+    <input type="text" id="passcodeInput" placeholder="PASSCODE" />
+    <button class="btn primary" id="loginBtn" style="width:100%; margin-top:10px;">Enter</button>
+    <p id="loginError" class="flag" style="margin-top:10px;"></p>
+  </div>
+
+  <div id="reviewerScreen" class="hidden panel reviewer-picker">
+    <div class="eyebrow">Who's reviewing?</div>
+    <p style="color: var(--slate); font-size: 13px;">Every action you take (overrides, assessments, exports) is tagged with this name for the audit trail.</p>
+    <select id="reviewerSelect"><option value="">— select a reviewer —</option></select>
+    <p style="color: var(--slate); font-size: 12px; margin: 14px 0 4px;">or add a new reviewer</p>
+    <input type="text" id="newReviewerInput" placeholder="Dr. ..." />
+    <button class="btn primary" id="continueBtn" style="width:100%; margin-top:10px;">Continue</button>
+    <p id="reviewerError" class="flag" style="margin-top:10px;"></p>
+  </div>
+
+  <div id="dashboardScreen" class="hidden">
+    <div id="navContainer"></div>
+
+    <div class="panel" style="padding: 18px; margin-bottom: 18px;">
+      <div class="filter-bar">
+        <input type="text" id="searchInput" placeholder="Search patient label or hospital ID..." style="flex:1; min-width:220px;" />
+        <select id="sideFilter">
+          <option value="">Any side</option>
+          <option value="left">Left</option>
+          <option value="right">Right</option>
+        </select>
+        <button class="btn" id="searchBtn">Search</button>
+      </div>
+
+      <table class="data-table" id="sessionsTable">
+        <thead>
+          <tr>
+            <th>Patient</th><th>Side</th><th>Hospital ID</th><th>Captured</th><th>Tasks</th><th>Status</th><th>Last reviewed by</th>
+          </tr>
+        </thead>
+        <tbody id="sessionsBody"><tr><td colspan="7" style="color:var(--slate);">Loading...</td></tr></tbody>
+      </table>
+      <div class="pagination">
+        <span id="pageInfo"></span>
+        <div>
+          <button class="btn" id="prevPageBtn" style="padding:4px 10px; font-size:12px;">← Prev</button>
+          <button class="btn" id="nextPageBtn" style="padding:4px 10px; font-size:12px;">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/config.js"></script>
+<script src="../shared/api-storage.js"></script>
+<script type="module" src="dashboard.js"></script>
+</body>
+</html>

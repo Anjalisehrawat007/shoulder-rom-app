@@ -18,8 +18,23 @@
   .params-table td:first-child { color: var(--slate); }
   .lightbox { position: fixed; inset: 0; background: #000000DD; display: flex; align-items: center; justify-content: center; z-index: 30; }
   .lightbox img { max-width: 90%; max-height: 90%; border-radius: 6px; }
-  .score-banner { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; margin-bottom: 20px; }
-  .score-banner .big { font-family: var(--font-mono); font-size: 40px; color: var(--signal); }
+  /* Quality Timeline chart (Phase 5, ICQA) -- same conventions as validation-portal's
+     Bland-Altman chart: thin marks, dashed recessive gridlines/threshold, native
+     SVG <title> tooltips instead of a JS hover layer. */
+  .qt-chart { background: var(--ink-2); border: 1px solid var(--line); border-radius: 6px; }
+  .qt-line { fill: none; stroke: var(--signal); stroke-width: 2; }
+  .qt-threshold { stroke: var(--slate); stroke-width: 1; stroke-dasharray: 4 3; }
+  .qt-point { fill: var(--signal); }
+  .qt-point.warn { fill: var(--amber); }
+  .qt-pause { fill: #E0A33933; stroke: none; }
+  .qt-label { font-family: var(--font-mono); font-size: 10px; fill: var(--slate); }
+  /* Phase 6: Modified Mallet grade panel + override form */
+  .mallet-grade-badge { font-family: var(--font-mono); font-size: 28px; color: var(--signal); }
+  .override-form { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
+  .override-form .field-row { display: grid; grid-template-columns: 100px 1fr; gap: 10px; align-items: start; margin-bottom: 8px; }
+  .override-form label { font-size: 11px; color: var(--slate); text-transform: uppercase; letter-spacing: .05em; padding-top: 6px; }
+  .override-history { font-size: 12px; color: var(--slate); margin-top: 8px; }
+  .report-links { display: flex; gap: 10px; }
 </style>
 </head>
 <body>
@@ -47,8 +62,26 @@
       <div style="text-align:right;">
         <div class="big" id="compositeScore">—</div>
         <div class="readout" id="compositeCi" style="font-size:12px; color:var(--slate);"></div>
+        <div class="readout" id="overallConfidence" style="font-size:12px; color:var(--slate);"></div>
       </div>
     </div>
+
+    <div class="panel score-banner">
+      <div>
+        <div class="eyebrow">AI-Assisted Modified Mallet Score</div>
+        <div style="color:var(--slate); font-size:13px;" id="malletOverallMeta">—</div>
+      </div>
+      <div style="text-align:right; display:flex; align-items:center; gap:16px;">
+        <div id="malletOverallSummary"></div>
+        <div class="report-links">
+          <a class="btn" id="downloadJsonReportBtn" href="#" target="_blank">JSON report</a>
+          <a class="btn" id="downloadPdfReportBtn" href="#" target="_blank">PDF report</a>
+        </div>
+      </div>
+    </div>
+
+    <p style="color:var(--slate); font-size:12px; margin-bottom:10px;">Click a category to see why it was scored that way.</p>
+    <div id="categoryPanels"></div>
     <div id="taskCards"></div>
   </div>
 </div>
@@ -57,6 +90,7 @@
 
 <script src="../shared/config.js"></script>
 <script src="../shared/api-storage.js"></script>
+<script src="../shared/clinical-render.js"></script>
 <script src="portal.js"></script>
 </body>
 </html>

@@ -81,11 +81,27 @@ h1, h2, h3 {
   font-size: 12px;
 }
 
+/* measured/estimated/unavailable badges -- see shared/biomechanics/parameter-schema.js */
+.measure-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 6px;
+  cursor: help;
+}
+.measure-badge.measured { color: var(--signal); border: 1px solid var(--signal); }
+.measure-badge.estimated { color: var(--amber); border: 1px solid var(--amber); }
+.measure-badge.unavailable { color: var(--slate); border: 1px solid var(--slate); }
+
 ::selection { background: var(--signal-dim); }
 
 a { color: var(--signal); }
 
-input[type="text"] {
+input[type="text"], input[type="date"], input[type="number"], select, textarea {
   font-family: var(--font-mono);
   background: var(--ink);
   border: 1px solid var(--line);
@@ -94,3 +110,79 @@ input[type="text"] {
   border-radius: 4px;
   letter-spacing: 0.08em;
 }
+textarea { font-family: var(--font-ui); letter-spacing: normal; width: 100%; resize: vertical; }
+
+/* Reusable score-banner / <details> drill-down panel pattern, shared by
+   doctor-portal (ASRI categories) and validation-portal (correlation
+   tables) so the two don't duplicate this CSS. */
+.score-banner { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; margin-bottom: 20px; }
+.score-banner .big { font-family: var(--font-mono); font-size: 40px; color: var(--signal); }
+.category-panel { padding: 14px 18px; margin-bottom: 10px; }
+.category-panel summary { display: flex; justify-content: space-between; align-items: center; cursor: pointer; list-style: none; }
+.category-panel summary::-webkit-details-marker { display: none; }
+.category-panel summary::before { content: "▸"; color: var(--signal); margin-right: 8px; }
+.category-panel[open] summary::before { content: "▾"; }
+.cat-score { font-family: var(--font-mono); font-size: 20px; color: var(--signal); margin-right: 10px; }
+.cat-confidence { font-size: 11px; color: var(--slate); }
+.contrib-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+.contrib-table td, .contrib-table th { padding: 4px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+.contrib-table th { color: var(--slate); font-weight: 500; text-transform: uppercase; font-size: 10px; letter-spacing: 0.04em; }
+
+/* ----------------------------------------------------------------------------
+   Phase 9: Clinician Research Dashboard -- shared across clinician-dashboard/*.
+   Reuses .panel/.btn/.eyebrow/.measure-badge/.flag from above; adds only what
+   the multi-patient list/nav/comparison/study-tile screens need that no
+   earlier phase's single-session view required.
+---------------------------------------------------------------------------- */
+.dash-nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+.dash-nav-links a { color: var(--paper); text-decoration: none; margin-right: 20px; font-size: 13px; padding-bottom: 4px; border-bottom: 2px solid transparent; }
+.dash-nav-links a.active { color: var(--signal); border-bottom-color: var(--signal); }
+.dash-nav-links a:hover { color: var(--signal); }
+.dash-nav-reviewer { font-size: 13px; color: var(--slate); }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; color: var(--slate); font-weight: 500; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.data-table td { padding: 10px; border-bottom: 1px solid var(--line); }
+.data-table tbody tr { cursor: pointer; }
+.data-table tbody tr:hover { background: var(--ink); }
+.status-pill { display: inline-block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 10px; }
+.status-pill.pending { color: var(--slate); border: 1px solid var(--slate); }
+.status-pill.reviewed, .status-pill.completed { color: var(--signal); border: 1px solid var(--signal); }
+.status-pill.in_review { color: var(--amber); border: 1px solid var(--amber); }
+
+.filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.filter-bar input, .filter-bar select { padding: 8px 10px; font-size: 13px; }
+
+.stat-tile-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+.stat-tile { flex: 1; min-width: 140px; padding: 16px; }
+.stat-tile .stat-value { font-family: var(--font-mono); font-size: 28px; color: var(--signal); }
+.stat-tile .stat-label { font-size: 11px; color: var(--slate); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+/* AI vs Clinician comparison table */
+.comparison-table td.disagree { color: var(--amber); }
+.comparison-table .agreement-tag { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; }
+.comparison-table .agreement-tag.disagree { color: var(--amber); }
+.comparison-table .agreement-tag.agree { color: var(--signal); }
+.comparison-table .agreement-tag.not_reviewed, .comparison-table .agreement-tag.not_applicable { color: var(--slate); }
+
+/* Joint-angle chart (shared/joint-angle-chart.js) */
+.angle-chart { background: var(--ink-2); border: 1px solid var(--line); border-radius: 6px; }
+.angle-legend { display: flex; gap: 14px; font-size: 11px; color: var(--slate); margin-bottom: 6px; flex-wrap: wrap; }
+.angle-legend-item { display: flex; align-items: center; gap: 5px; }
+.angle-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.angle-axis-label { font-family: var(--font-mono); font-size: 10px; fill: var(--slate); }
+.angle-point.unavailable { opacity: 0.25; }
+.chart-empty { color: var(--slate); font-size: 12px; }
+
+/* Video + timeline scrubber (review.js) */
+.video-panel { display: flex; flex-direction: column; gap: 8px; }
+.video-panel video { width: 100%; max-width: 480px; border-radius: 6px; border: 1px solid var(--line); background: #000; }
+.sync-nudge { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--slate); }
+.sync-nudge input[type="range"] { width: 140px; }
+
+/* Audit log */
+.audit-entry { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.audit-entry .audit-meta { font-size: 11px; color: var(--slate); margin-top: 3px; }
+
+.clinician-panel-form .field-row { display: grid; grid-template-columns: 160px 1fr; gap: 10px; align-items: start; margin-bottom: 10px; }
+.clinician-panel-form label { font-size: 11px; color: var(--slate); text-transform: uppercase; letter-spacing: .05em; padding-top: 8px; }

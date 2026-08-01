@@ -1,0 +1,59 @@
+{
+  "version": "2.0.0",
+  "label": "ASRI v2 -- parameterized, confidence-aware, 5-category framework",
+  "notes": "Weights below are PLACEHOLDERS pending pilot-cohort fitting -- see docs/asri.md. Never hard-code new values directly in asri-engine.js; publish a new config version instead (never mutate this one in place).",
+  "sigmoid": { "midpoint": 0.5, "steepness": 8 },
+  "categories": {
+    "rom": {
+      "label": "ROM Score",
+      "weight": { "early": 0.30, "late": 0.20 },
+      "aggregation": "best_across_tasks",
+      "parameters": {
+        "shoulderAbductionDeg": { "weight": 0.30, "direction": "higher_is_better", "referenceKey": "shoulderAbductionDeg" },
+        "shoulderFlexionDeg": { "weight": 0.25, "direction": "higher_is_better", "referenceKey": "shoulderFlexionDeg" },
+        "externalRotationDeg": { "weight": 0.25, "direction": "higher_is_better", "referenceKey": "externalRotationDeg" },
+        "internalRotationDeg": { "weight": 0.20, "direction": "higher_is_better", "referenceKey": "internalRotationDeg" }
+      }
+    },
+    "movementQuality": {
+      "label": "Movement Quality",
+      "weight": { "early": 0.10, "late": 0.20 },
+      "aggregation": "average_across_tasks",
+      "parameters": {
+        "movementSmoothness": { "weight": 0.65, "direction": "higher_is_better", "referenceKey": "movementSmoothness" },
+        "movementSpeed": { "weight": 0.35, "direction": "higher_is_better", "referenceKey": "movementSpeed" }
+      }
+    },
+    "compensation": {
+      "label": "Compensation",
+      "weight": { "early": 0.25, "late": 0.20 },
+      "aggregation": "worst_across_tasks",
+      "parameters": {
+        "trunkLateralLeanDeg": { "weight": 0.35, "direction": "lower_is_better", "referenceKey": "trunkLateralLeanDeg" },
+        "trunkRotationDeg": { "weight": 0.25, "direction": "lower_is_better", "referenceKey": "trunkRotationDeg" },
+        "scapularTiltDeg": { "weight": 0.20, "direction": "lower_is_better", "referenceKey": "scapularTiltDeg" },
+        "scapularWingingFlag": { "weight": 0.20, "direction": "boolean_flag", "trueScore": 40, "falseScore": 90 }
+      }
+    },
+    "symmetry": {
+      "label": "Symmetry",
+      "weight": { "early": 0.10, "late": 0.15 },
+      "aggregation": "bilateral_comparison",
+      "parameters": {}
+    },
+    "functionalPerformance": {
+      "label": "Functional Tasks",
+      "weight": { "early": 0.25, "late": 0.25 },
+      "aggregation": "task_composite_average",
+      "compositeWeights": { "rom": 0.5, "movementQuality": 0.3, "compensation": 0.2 }
+    }
+  },
+  "confidenceWeights": {
+    "measured_high": 1.0,
+    "measured_moderate": 0.8,
+    "estimated_moderate": 0.6,
+    "estimated_low": 0.35,
+    "unavailable": 0
+  },
+  "confidence": { "z": 1.96, "kVariance": 1, "kCompleteness": 12 }
+}

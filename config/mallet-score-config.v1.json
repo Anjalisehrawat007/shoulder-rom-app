@@ -1,0 +1,112 @@
+{
+  "version": "1.0.0",
+  "citation": "Mallet J. (1972) 'Paralysie obstétricale du plexus brachial', Rev Chir Orthop 58(Suppl 1):166-168; Bae DS, Waters PM, Zurakowski D. (2003) 'Reliability of three classification systems measuring active motion in brachial plexus birth palsy', J Bone Joint Surg Am 85(9):1733-1738 -- the standard reference for the pediatric OBPP Modified Mallet Score's 5 categories (Global Abduction, Global External Rotation, Hand to Neck, Hand to Spine, Hand to Mouth), each graded I (no function) to V (normal).",
+  "notes": "Mallet's original I-V descriptions are qualitative clinical observations (e.g. 'reaches neck with marked abduction'), not device-measured angle cutoffs. The gradingRules below are a documented OPERATIONALIZATION into automatable thresholds -- an interpretation choice this app makes explicit and versioned, not a verbatim transcription of the published criteria. These are initial defaults, not fit to clinician-labelled outcome data (none exists yet for this system) -- see docs/mallet-score.md and shared/assessment/ModifiedMalletScoreEngine.js for the calibration-readiness design intended to let a future clinician-labelled dataset retune these via a new published version, never an in-place edit.",
+
+  "confidenceWeights": {
+    "measured_high": 1.0,
+    "measured_moderate": 0.85,
+    "measured_low": 0.6,
+    "estimated_high": 0.75,
+    "estimated_moderate": 0.55,
+    "estimated_low": 0.3,
+    "unavailable": 0
+  },
+
+  "confidenceBlend": {
+    "measurementConfidence": 0.35,
+    "dmqeConfidence": 0.25,
+    "cqiConfidence": 0.25,
+    "boundaryDistance": 0.15
+  },
+  "boundaryDistanceNormalizationDeg": 15,
+
+  "measurementProxies": {
+    "reachSuccessRadiusNormalized": 0.12,
+    "vertebralLevelBuckets": [
+      { "maxFraction": 0.15, "label": "cannot_reach_back" },
+      { "maxFraction": 0.4, "label": "sacrum_buttock" },
+      { "maxFraction": 0.6, "label": "L3_lumbar" },
+      { "maxFraction": 0.8, "label": "T12_thoracolumbar" },
+      { "maxFraction": 999, "label": "T7_or_higher" }
+    ]
+  },
+
+  "tasks": {
+    "globalAbduction": {
+      "label": "Global Abduction",
+      "citation": "Bae et al. 2003 -- band thresholds operationalized from the published qualitative grade descriptions, see top-level notes.",
+      "primaryMeasurementKey": "shoulderAbductionDeg",
+      "gradingRules": [
+        { "grade": "V", "conditions": [{ "key": "shoulderAbductionDeg", "op": ">=", "value": 150 }] },
+        { "grade": "IV", "conditions": [{ "key": "shoulderAbductionDeg", "op": ">=", "value": 90 }] },
+        { "grade": "III", "conditions": [{ "key": "shoulderAbductionDeg", "op": ">=", "value": 30 }] },
+        { "grade": "II", "conditions": [{ "key": "shoulderAbductionDeg", "op": ">", "value": 0 }] }
+      ],
+      "fallbackGrade": "I",
+      "compensationDemotion": { "flagKey": "trunkCompensationFlag", "demoteBy": 1, "onlyIfGradeAtLeast": "III" }
+    },
+    "globalExternalRotation": {
+      "label": "Global External Rotation",
+      "citation": "Bae et al. 2003 -- band thresholds operationalized; measured via the existing externalRotationDeg proxy (shared/biomechanics/angle-computation.js), valid near ~90deg elbow flexion which this task's instruction enforces.",
+      "primaryMeasurementKey": "externalRotationDeg",
+      "gradingRules": [
+        { "grade": "V", "conditions": [{ "key": "externalRotationDeg", "op": ">=", "value": 40 }] },
+        { "grade": "IV", "conditions": [{ "key": "externalRotationDeg", "op": ">=", "value": 20 }] },
+        { "grade": "III", "conditions": [{ "key": "externalRotationDeg", "op": ">=", "value": 0 }] },
+        { "grade": "II", "conditions": [{ "key": "externalRotationDeg", "op": ">", "value": -20 }] }
+      ],
+      "fallbackGrade": "I",
+      "compensationDemotion": { "flagKey": "trunkCompensationFlag", "demoteBy": 1, "onlyIfGradeAtLeast": "III" }
+    },
+    "handToNeck": {
+      "label": "Hand to Neck",
+      "citation": "Bae et al. 2003 -- the published criteria weigh both reach and how much compensation was needed to achieve it, operationalized here as an ordered rule set rather than a single-value band.",
+      "primaryMeasurementKey": "reachSuccess",
+      "gradingRules": [
+        { "grade": "V", "conditions": [{ "key": "reachSuccess", "op": "==", "value": true }, { "key": "shoulderElevationDeg", "op": "<", "value": 90 }, { "key": "trunkCompensationFlag", "op": "==", "value": false }] },
+        { "grade": "IV", "conditions": [{ "key": "reachSuccess", "op": "==", "value": true }, { "key": "trunkCompensationFlag", "op": "==", "value": false }] },
+        { "grade": "III", "conditions": [{ "key": "reachSuccess", "op": "==", "value": true }] },
+        { "grade": "II", "conditions": [{ "key": "shoulderElevationDeg", "op": ">=", "value": 60 }] }
+      ],
+      "fallbackGrade": "I"
+    },
+    "handToSpine": {
+      "label": "Hand to Spine",
+      "citation": "Bae et al. 2003 -- the published criteria are graded by vertebral level reached; operationalized here via the vertebralLevelProxy bucket (see measurementProxies above and shared/assessment/mallet-measurements.js for its documented limitations).",
+      "primaryMeasurementKey": "vertebralLevelProxy",
+      "gradingRules": [
+        { "grade": "V", "conditions": [{ "key": "vertebralLevelProxy", "op": "==", "value": "T7_or_higher" }] },
+        { "grade": "IV", "conditions": [{ "key": "vertebralLevelProxy", "op": "==", "value": "T12_thoracolumbar" }] },
+        { "grade": "III", "conditions": [{ "key": "vertebralLevelProxy", "op": "==", "value": "L3_lumbar" }] },
+        { "grade": "II", "conditions": [{ "key": "vertebralLevelProxy", "op": "==", "value": "sacrum_buttock" }] }
+      ],
+      "fallbackGrade": "I"
+    },
+    "handToMouth": {
+      "label": "Hand to Mouth",
+      "citation": "Bae et al. 2003 -- the published criteria are graded primarily by how much shoulder abduction/scapular winging compensation is needed, not raw speed; operationalized here via shoulderFlexionDeg (how much shoulder movement was needed) and trunkCompensationFlag rather than the task's recorded completionTimeSec, which is context, not the grade driver.",
+      "primaryMeasurementKey": "shoulderFlexionDeg",
+      "gradingRules": [
+        { "grade": "V", "conditions": [{ "key": "elbowFlexionDeg", "op": "<=", "value": 60 }, { "key": "shoulderFlexionDeg", "op": "<", "value": 40 }, { "key": "trunkCompensationFlag", "op": "==", "value": false }] },
+        { "grade": "IV", "conditions": [{ "key": "shoulderFlexionDeg", "op": "<", "value": 70 }, { "key": "trunkCompensationFlag", "op": "==", "value": false }] },
+        { "grade": "III", "conditions": [{ "key": "shoulderFlexionDeg", "op": "<", "value": 100 }] },
+        { "grade": "II", "conditions": [{ "key": "shoulderFlexionDeg", "op": ">=", "value": 100 }] }
+      ],
+      "fallbackGrade": "I"
+    },
+    "internalRotation": {
+      "label": "Internal Rotation (supplementary item -- NOT part of the classic 5-category Mallet 1972 / Bae et al. 2003 scale; a locally-defined addition to this app's protocol, graded I-V using the same ordinal philosophy for consistency)",
+      "citation": "Locally defined -- see docs/mallet-score.md for provenance. Measured via the existing internalRotationDeg proxy, whose documented valid operating window (~90deg elbow flexion) does not match this task's hand-behind-back posture -- see measurementLimitations in ModifiedMalletScoreEngine.js output for this task.",
+      "primaryMeasurementKey": "internalRotationDeg",
+      "gradingRules": [
+        { "grade": "V", "conditions": [{ "key": "internalRotationDeg", "op": ">=", "value": 60 }] },
+        { "grade": "IV", "conditions": [{ "key": "internalRotationDeg", "op": ">=", "value": 40 }] },
+        { "grade": "III", "conditions": [{ "key": "internalRotationDeg", "op": ">=", "value": 20 }] },
+        { "grade": "II", "conditions": [{ "key": "internalRotationDeg", "op": ">", "value": 0 }] }
+      ],
+      "fallbackGrade": "I",
+      "compensationDemotion": { "flagKey": "trunkCompensationFlag", "demoteBy": 1, "onlyIfGradeAtLeast": "III" }
+    }
+  }
+}

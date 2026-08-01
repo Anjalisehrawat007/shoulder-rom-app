@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pilot Studies — Clinician Dashboard</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<style>
+  .hidden { display: none !important; }
+  .shell { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+  .studies-list { padding: 18px; margin-bottom: 18px; }
+  .study-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .study-row:hover { color: var(--signal); }
+  .create-form { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .create-form input { flex: 1; min-width: 160px; }
+  .assign-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .assign-row input { flex: 1; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header style="margin-bottom: 12px;">
+    <div class="eyebrow"><a href="index.html" style="color:inherit;">← Patients</a> · OBPP · Hoffer Tendon Transfer Protocol</div>
+    <h1>Pilot Studies</h1>
+  </header>
+  <div id="navContainer"></div>
+
+  <div class="panel studies-list">
+    <div class="eyebrow">Studies</div>
+    <div id="studiesList" style="margin-top:10px;"><p style="color:var(--slate);">Loading...</p></div>
+    <form id="createStudyForm" class="create-form">
+      <input type="text" id="newStudyName" placeholder="Study name, e.g. 'Q3 Pilot Cohort'" required />
+      <input type="text" id="newStudyNotes" placeholder="Notes (optional)" />
+      <button type="submit" class="btn primary">Create study</button>
+    </form>
+  </div>
+
+  <div id="detailPanel" class="hidden">
+    <div class="panel" style="padding:18px; margin-bottom:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div class="eyebrow" id="studyName">—</div>
+          <div style="color:var(--slate); font-size:12px;" id="studyMeta">—</div>
+        </div>
+        <select id="studyStatusSelect">
+          <option value="active">Active</option>
+          <option value="completed">Completed</option>
+          <option value="archived">Archived</option>
+        </select>
+      </div>
+
+      <div class="stat-tile-row" id="statTiles"></div>
+
+      <div class="eyebrow" style="margin-top:16px;">Assign a patient</div>
+      <div class="assign-row" style="margin-top:8px;">
+        <input type="text" id="assignSessionId" placeholder="hospital ID / sessionId" />
+        <input type="text" id="assignReviewer" placeholder="assign to reviewer (optional)" />
+        <button class="btn" id="assignBtn">Assign</button>
+      </div>
+
+      <table class="data-table">
+        <thead><tr><th>Patient</th><th>Assigned reviewer</th><th>Status</th><th></th></tr></thead>
+        <tbody id="membersBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/config.js"></script>
+<script src="../shared/api-storage.js"></script>
+<script type="module" src="studies.js"></script>
+</body>
+</html>

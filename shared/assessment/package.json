@@ -1,0 +1,6 @@
+{
+  "name": "shoulder-rom-assessment",
+  "private": true,
+  "type": "module",
+  "description": "Scopes ES module resolution to this directory, matching shared/biomechanics, shared/asri, shared/motion, shared/validation, shared/icqa. The 6-task Modified Mallet assessment workflow: task definitions/instructions, new Mallet-specific derived measurements, the independent AI-Assisted Modified Mallet Score Engine, the per-task recorder/results/controller, and the top-level workflow orchestrator. ModifiedMalletScoreEngine.js has zero imports from shared/asri, shared/motion, shared/validation, or shared/icqa -- the other files here orchestrate those engines (read their output, never modify them), the same integration relationship capture/app.js already had with them before this phase."
+}

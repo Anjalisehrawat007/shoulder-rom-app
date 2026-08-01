@@ -1,0 +1,6 @@
+{
+  "name": "shoulder-rom-motion",
+  "private": true,
+  "type": "module",
+  "description": "Scopes ES module resolution to this directory, matching shared/biomechanics and shared/asri. Full-sequence motion pipeline: filtering, segmentation, trajectory analysis, and the Dynamic Movement Quality Engine (DMQE)."
+}

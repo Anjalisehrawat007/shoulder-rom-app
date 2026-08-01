@@ -1,0 +1,6 @@
+{
+  "name": "shoulder-rom-reporting",
+  "private": true,
+  "type": "module",
+  "description": "Scopes ES module resolution to this directory, matching shared/biomechanics, shared/asri, shared/motion, shared/validation, shared/icqa, shared/assessment. Combined clinical report generation (Modified Mallet + ASRI + DMQE + ICQA + clinician overrides) -- structured object + Markdown renderer. PDF rendering (backend/pdf-renderer.js) consumes the same structured object from the CommonJS backend, kept out of this directory since pdfkit is a Node-only, non-browser dependency."
+}

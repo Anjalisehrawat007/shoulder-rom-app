@@ -1,0 +1,6 @@
+{
+  "name": "shoulder-rom-icqa",
+  "private": true,
+  "type": "module",
+  "description": "Scopes ES module resolution to this directory, matching shared/biomechanics, shared/asri, shared/motion, shared/validation. Intelligent Camera Quality Assurance: camera geometry, frame quality, body visibility, tracking stability, the Capture Quality Index (CQI), guidance, recording gate, and quality timeline. Independent of ASRI/DMQE/Validation -- never imports from them."
+}

@@ -1,0 +1,35 @@
+{
+  "version": "1.1.0",
+  "notes": "REFERENCE / DOCUMENTATION COPY. shared/biomechanics/rotation-estimation.js and rotation-trajectory.js embed identical default object literals rather than fetching this file at runtime -- computeParameters(lm, side) must remain perfectly synchronous with an unchanged signature (called many times per second from the live frame loop). This file exists so the versioned thresholds are auditable and documented the same way every other phase's config is. Kept in sync with the embedded DEFAULT_CONFIG/DEFAULT_TRAJECTORY_CONFIG objects by hand -- if you change one, change the other. Version bumped 1.0.0 -> 1.1.0 in Phase 8 (verification/hardening, not a redesign) to reflect two new confidence factors added after being identified as genuine gaps against that phase's own explicit acceptance criteria -- see rotation-estimation.js's Phase 8 header note and the Phase 8 final report.",
+  "citation": "Sensitivity model derived from the existing forearm-perpendicular-component geometry (shared/biomechanics/coordinate-frame.js's projectOntoPlane, unchanged); elbow-angle convention (180deg=full extension, matching shared/assessment/mallet-measurements.js's computeElbowFlexionDeg for consistency); ideal-90-degree window matches the standard clinical goniometry technique for shoulder IR/ER (elbow at side, flexed 90 degrees) and Modified Mallet Task 2's own instruction. Posture/trunk-compensation penalties are this project's own reasoned defaults (Phase 8), not derived from a cited external threshold -- documented as such, not fit to clinician-labelled data yet.",
+
+  "idealElbowAngleDeg": 90,
+  "minSensitivityForUnavailable": 0.3,
+  "confidenceBlend": {
+    "sensitivity": 0.45,
+    "landmarkVisibility": 0.2,
+    "trunkCompensation": 0.15,
+    "posture": 0.2
+  },
+  "confidenceBuckets": {
+    "high": 0.75,
+    "moderate": 0.45
+  },
+  "landmarkReliabilityBuckets": {
+    "high": 0.75,
+    "moderate": 0.45
+  },
+  "defaultVisibilityWhenMissing": 0.8,
+  "trustScoreWeights": {
+    "confidenceScore": 0.7,
+    "landmarkReliability": 0.3
+  },
+  "maxTolerableLeanDeg": 25,
+  "maxTolerableElevationDeg": 60,
+
+  "trajectory": {
+    "minFrameConfidenceScore": 0.35,
+    "minReliableFrameFraction": 0.15,
+    "cqiBlendWeight": 0.25
+  }
+}

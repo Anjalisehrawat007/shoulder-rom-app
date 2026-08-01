@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Assessment Review — Clinician Dashboard</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<style>
+  .hidden { display: none !important; }
+  .shell { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+  .task-card { padding: 18px; margin-bottom: 16px; }
+  .thumbs { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+  .thumbs img { width: 120px; height: 90px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); cursor: pointer; }
+  .params-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .params-table td { padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  .params-table td:first-child { color: var(--slate); }
+  .lightbox { position: fixed; inset: 0; background: #000000DD; display: flex; align-items: center; justify-content: center; z-index: 30; }
+  .lightbox img { max-width: 90%; max-height: 90%; border-radius: 6px; }
+  .qt-chart { background: var(--ink-2); border: 1px solid var(--line); border-radius: 6px; }
+  .qt-line { fill: none; stroke: var(--signal); stroke-width: 2; }
+  .qt-threshold { stroke: var(--slate); stroke-width: 1; stroke-dasharray: 4 3; }
+  .qt-point { fill: var(--signal); }
+  .qt-point.warn { fill: var(--amber); }
+  .qt-pause { fill: #E0A33933; stroke: none; }
+  .qt-label { font-family: var(--font-mono); font-size: 10px; fill: var(--slate); }
+  .mallet-grade-badge { font-family: var(--font-mono); font-size: 28px; color: var(--signal); }
+  .override-form { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
+  .override-form .field-row { display: grid; grid-template-columns: 100px 1fr; gap: 10px; align-items: start; margin-bottom: 8px; }
+  .override-form label { font-size: 11px; color: var(--slate); text-transform: uppercase; letter-spacing: .05em; padding-top: 6px; }
+  .override-history { font-size: 12px; color: var(--slate); margin-top: 8px; }
+  .report-links { display: flex; gap: 10px; flex-wrap: wrap; }
+  .task-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .task-tabs button { padding: 6px 12px; font-size: 12px; }
+  .task-tabs button.active { background: var(--signal); color: var(--ink); border-color: var(--signal); }
+  .param-override-btn { font-size: 10px; padding: 1px 6px; margin-left: 6px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header style="margin-bottom: 12px;">
+    <div class="eyebrow"><a href="index.html" style="color:inherit;">← Patients</a> · OBPP · Hoffer Tendon Transfer Protocol</div>
+    <h1>Assessment Review</h1>
+  </header>
+  <div id="navContainer"></div>
+
+  <div id="loadError" class="flag hidden" style="margin-bottom:16px;"></div>
+
+  <div id="content" class="hidden">
+    <div class="panel score-banner">
+      <div>
+        <div class="eyebrow" id="patientLabel">—</div>
+        <div style="color:var(--slate); font-size:13px;" id="sessionMeta">—</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="big" id="compositeScore">—</div>
+        <div class="readout" id="compositeCi" style="font-size:12px; color:var(--slate);"></div>
+      </div>
+    </div>
+
+    <div class="panel score-banner">
+      <div>
+        <div class="eyebrow">AI-Assisted Modified Mallet Score</div>
+        <div style="color:var(--slate); font-size:13px;" id="malletOverallMeta">—</div>
+      </div>
+      <div style="text-align:right; display:flex; align-items:center; gap:16px;">
+        <div id="malletOverallSummary"></div>
+        <div class="report-links">
+          <button class="btn" id="downloadResearchJsonBtn">Research JSON</button>
+          <button class="btn" id="downloadResearchPdfBtn">Research PDF</button>
+          <button class="btn" id="downloadCsvBtn">CSV</button>
+          <button class="btn" id="downloadXlsxBtn">Excel</button>
+        </div>
+      </div>
+    </div>
+
+    <details class="panel category-panel" open>
+      <summary><span>Clinician Assessment Panel</span><span class="cat-confidence">Your own observations -- does not alter AI values</span></summary>
+      <form id="assessmentForm" class="clinician-panel-form" style="margin-top:12px;">
+        <div class="field-row">
+          <label>Assessment date</label>
+          <input type="date" name="assessmentDate" required />
+        </div>
+        <div class="field-row">
+          <label>Modified Mallet score</label>
+          <select name="malletScoreOverall">
+            <option value="">—</option>
+            <option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>ROM estimate (°)</label>
+          <input type="number" name="rom" placeholder="total active ROM" />
+        </div>
+        <div class="field-row">
+          <label>External / internal rotation (°)</label>
+          <div style="display:flex; gap:8px;">
+            <input type="number" name="externalRotation" placeholder="external" style="flex:1;" />
+            <input type="number" name="internalRotation" placeholder="internal" style="flex:1;" />
+          </div>
+        </div>
+        <div class="field-row">
+          <label>Compensation severity</label>
+          <select name="compensationSeverity">
+            <option value="">—</option>
+            <option value="none">None</option>
+            <option value="mild">Mild</option>
+            <option value="moderate">Moderate</option>
+            <option value="severe">Severe</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>Overall assessment</label>
+          <textarea name="overallAssessment" rows="2" placeholder="Summary of clinical impression..."></textarea>
+        </div>
+        <div class="field-row">
+          <label>Comments / notes</label>
+          <textarea name="notes" rows="2"></textarea>
+        </div>
+        <div class="field-row">
+          <label>Your confidence (%)</label>
+          <input type="number" name="clinicianConfidencePct" min="0" max="100" />
+        </div>
+        <div class="field-row">
+          <label>Recommendation</label>
+          <textarea name="clinicianRecommendation" rows="2" placeholder="Continue therapy, refer for surgery, etc."></textarea>
+        </div>
+        <button type="submit" class="btn primary">Save clinician assessment</button>
+        <span id="assessmentSaved" class="flag" style="margin-left:10px;"></span>
+      </form>
+    </details>
+
+    <details class="panel category-panel" open>
+      <summary><span>AI vs Clinician Comparison</span><span class="cat-confidence" id="disagreementCount"></span></summary>
+      <table class="data-table comparison-table" style="margin-top:12px;">
+        <thead><tr><th>Field</th><th>Task</th><th>AI value</th><th>Clinician value</th><th>Agreement</th><th></th></tr></thead>
+        <tbody id="comparisonBody"></tbody>
+      </table>
+    </details>
+
+    <div id="taskTabs" class="task-tabs"></div>
+    <div id="taskPanels"></div>
+
+    <details class="panel category-panel">
+      <summary><span>Audit History</span><span class="cat-confidence" id="auditCountLabel"></span></summary>
+      <div id="auditList" style="margin-top:10px;"></div>
+    </details>
+  </div>
+</div>
+
+<div id="lightbox" class="lightbox hidden"><img id="lightboxImg" /></div>
+
+<script src="../shared/config.js"></script>
+<script src="../shared/api-storage.js"></script>
+<script src="../shared/clinical-render.js"></script>
+<script type="module" src="review.js"></script>
+</body>
+</html>

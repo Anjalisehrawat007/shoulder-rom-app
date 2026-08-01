@@ -1,0 +1,6 @@
+{
+  "name": "shoulder-rom-validation",
+  "private": true,
+  "type": "module",
+  "description": "Scopes ES module resolution to this directory, matching shared/biomechanics, shared/asri, shared/motion. Clinical Validation Engine: statistics, comparison, reliability, calibration advice, quality control, report generation. Reads ASRI/DMQE output; never modifies it."
+}

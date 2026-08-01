@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Audit Log — Clinician Dashboard</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<style>
+  .hidden { display: none !important; }
+  .shell { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+  .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 12px; color: var(--slate); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header style="margin-bottom: 12px;">
+    <div class="eyebrow"><a href="index.html" style="color:inherit;">← Patients</a> · OBPP · Hoffer Tendon Transfer Protocol</div>
+    <h1>Audit Log</h1>
+  </header>
+  <div id="navContainer"></div>
+
+  <div class="panel" style="padding: 18px;">
+    <div class="filter-bar">
+      <input type="text" id="sessionIdFilter" placeholder="Filter by sessionId..." />
+      <input type="text" id="reviewerFilter" placeholder="Filter by reviewer name..." />
+      <select id="entityTypeFilter">
+        <option value="">Any type</option>
+        <option value="mallet_override">Mallet override</option>
+        <option value="parameter_override">Parameter override</option>
+        <option value="clinician_assessment">Clinician assessment</option>
+        <option value="study_assignment">Study assignment</option>
+        <option value="study_status">Study status</option>
+      </select>
+      <button class="btn" id="filterBtn">Filter</button>
+    </div>
+
+    <div id="auditList"><p style="color:var(--slate);">Loading...</p></div>
+    <div class="pagination">
+      <span id="pageInfo"></span>
+      <div>
+        <button class="btn" id="prevPageBtn" style="padding:4px 10px; font-size:12px;">← Prev</button>
+        <button class="btn" id="nextPageBtn" style="padding:4px 10px; font-size:12px;">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/config.js"></script>
+<script src="../shared/api-storage.js"></script>
+<script type="module" src="audit.js"></script>
+</body>
+</html>

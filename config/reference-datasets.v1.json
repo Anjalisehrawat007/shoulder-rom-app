@@ -1,0 +1,52 @@
+{
+  "version": "1.0.0",
+  "label": "Initial placeholder reference targets -- NOT fitted on real cohort data",
+  "notes": "target/expectedSd values below are placeholders (the 'default' entry carries forward the original flat NORMS that used to live in capture/app.js: 170/170/80/70), pending real pilot-cohort fitting per spec §5. Replace via a new dataset version (bump 'version' and publish), never edit an existing entry in place -- sessions already scored reference the version active at their creation time.",
+  "datasets": [
+    {
+      "id": "default",
+      "criteria": { "ageGroupMonths": null, "monthsSinceSurgeryRange": null, "side": null, "hospitalId": null },
+      "targets": {
+        "shoulderAbductionDeg": { "target": 170, "expectedSd": 15 },
+        "shoulderFlexionDeg": { "target": 170, "expectedSd": 15 },
+        "externalRotationDeg": { "target": 80, "expectedSd": 15 },
+        "internalRotationDeg": { "target": 70, "expectedSd": 15 },
+        "movementSmoothness": { "target": 100, "expectedSd": 15 },
+        "movementSpeed": { "target": 1.0, "expectedSd": 0.4 },
+        "trunkLateralLeanDeg": { "target": 20, "expectedSd": 8 },
+        "trunkRotationDeg": { "target": 20, "expectedSd": 8 },
+        "scapularTiltDeg": { "target": 50, "expectedSd": 12 }
+      }
+    },
+    {
+      "id": "infant-early-post-op",
+      "criteria": { "ageGroupMonths": [0, 24], "monthsSinceSurgeryRange": [0, 3], "side": null, "hospitalId": null },
+      "targets": {
+        "shoulderAbductionDeg": { "target": 120, "expectedSd": 20 },
+        "shoulderFlexionDeg": { "target": 120, "expectedSd": 20 },
+        "externalRotationDeg": { "target": 50, "expectedSd": 20 },
+        "internalRotationDeg": { "target": 50, "expectedSd": 20 },
+        "movementSmoothness": { "target": 80, "expectedSd": 20 },
+        "movementSpeed": { "target": 0.7, "expectedSd": 0.4 },
+        "trunkLateralLeanDeg": { "target": 25, "expectedSd": 10 },
+        "trunkRotationDeg": { "target": 25, "expectedSd": 10 },
+        "scapularTiltDeg": { "target": 55, "expectedSd": 15 }
+      }
+    },
+    {
+      "id": "child-long-term-followup",
+      "criteria": { "ageGroupMonths": [24, 216], "monthsSinceSurgeryRange": [12, 999], "side": null, "hospitalId": null },
+      "targets": {
+        "shoulderAbductionDeg": { "target": 170, "expectedSd": 12 },
+        "shoulderFlexionDeg": { "target": 170, "expectedSd": 12 },
+        "externalRotationDeg": { "target": 85, "expectedSd": 12 },
+        "internalRotationDeg": { "target": 75, "expectedSd": 12 },
+        "movementSmoothness": { "target": 100, "expectedSd": 10 },
+        "movementSpeed": { "target": 1.1, "expectedSd": 0.3 },
+        "trunkLateralLeanDeg": { "target": 15, "expectedSd": 6 },
+        "trunkRotationDeg": { "target": 15, "expectedSd": 6 },
+        "scapularTiltDeg": { "target": 45, "expectedSd": 10 }
+      }
+    }
+  ]
+}

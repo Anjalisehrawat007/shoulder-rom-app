@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Validation Portal — Clinical Validation Engine</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<style>
+  .hidden { display: none !important; }
+  .shell { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .tabs .btn.active { background: var(--signal); border-color: var(--signal); color: var(--ink); }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; letter-spacing: 0.06em; color: var(--slate); margin-bottom: 6px; text-transform: uppercase; }
+  .field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .panel-pad { padding: 22px; }
+  .qc-issue { padding: 8px 12px; border-radius: 4px; margin-bottom: 6px; font-size: 12px; border-left: 3px solid var(--line); }
+  .qc-issue.error { border-color: #d9534f; }
+  .qc-issue.warning { border-color: var(--amber); }
+  .qc-issue.info { border-color: var(--slate); }
+  .ba-chart { background: var(--ink-2); border: 1px solid var(--line); border-radius: 6px; }
+  .ba-point { fill: var(--signal); }
+  .ba-point.outlier { fill: var(--amber); }
+  .ba-line { stroke: var(--slate); stroke-width: 1; stroke-dasharray: 4 3; }
+  .ba-line.bias { stroke: var(--signal); stroke-dasharray: none; }
+  .ba-label { font-family: var(--font-mono); font-size: 10px; fill: var(--slate); }
+  .card-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data-table td, table.data-table th { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+  table.data-table th { color: var(--slate); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+  pre.report-markdown { white-space: pre-wrap; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; padding: 20px; }
+
+  /* Phase 10: research charts (scatter/histogram/heatmap, shared/research-charts.js) */
+  .chart-title { font-size: 11px; color: var(--slate); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .chart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .chart-empty { color: var(--slate); font-size: 12px; }
+  .research-chart { background: var(--ink-2); border: 1px solid var(--line); border-radius: 6px; }
+  .chart-axis-label { font-family: var(--font-mono); font-size: 10px; fill: var(--slate); }
+  .scatter-point { fill: var(--signal); opacity: 0.8; }
+  .scatter-refline { stroke: var(--slate); stroke-width: 1; stroke-dasharray: 4 3; }
+  .histogram-bar { fill: var(--signal); opacity: 0.85; }
+  .heatmap-cell { stroke: var(--ink); stroke-width: 1; }
+  .heatmap-cell-label { font-family: var(--font-mono); font-size: 11px; text-anchor: middle; }
+
+  /* Phase 10: pilot study readiness classification */
+  .readiness-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .readiness-badge { padding: 12px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--ink); }
+  .readiness-label { font-size: 11px; color: var(--slate); text-transform: uppercase; letter-spacing: 0.05em; }
+  .readiness-status { font-family: var(--font-mono); font-size: 15px; margin: 4px 0; text-transform: capitalize; }
+  .readiness-reason { font-size: 11px; color: var(--slate); line-height: 1.4; }
+  .readiness-complete .readiness-status, .readiness-adequate_sample .readiness-status { color: var(--signal); }
+  .readiness-preliminary .readiness-status, .readiness-blocked .readiness-status { color: var(--amber); }
+  .readiness-not_ready .readiness-status, .readiness-not_started .readiness-status { color: var(--slate); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header style="margin-bottom: 24px;">
+    <div class="eyebrow"><a href="../index.html" style="color:inherit;">← Home</a> · OBPP · Hoffer Tendon Transfer Protocol</div>
+    <h1>Validation Portal — Clinical Validation Engine</h1>
+    <p style="color:var(--slate); font-size:13px; margin-top:6px;">Compares app measurements against clinician assessments. Never modifies ASRI or DMQE — see <a href="../docs/validation.md">docs/validation.md</a>.</p>
+  </header>
+
+  <div class="tabs">
+    <button class="btn active" data-tab="assessment">New Assessment</button>
+    <button class="btn" data-tab="datasets">Datasets</button>
+    <button class="btn" data-tab="validation">Run Validation</button>
+    <button class="btn" data-tab="reports">Reports</button>
+  </div>
+
+  <!-- New Assessment -->
+  <section id="tab-assessment" class="panel panel-pad">
+    <h2 style="font-size:16px; margin-bottom:16px;">Clinician Assessment</h2>
+    <div class="field-grid">
+      <div class="field"><label>Hospital ID (session)</label><input type="text" id="a_sessionId" placeholder="e.g. 1234567" /></div>
+      <div class="field"><label>Assessment date</label><input type="date" id="a_assessmentDate" /></div>
+      <div class="field"><label>Affected side</label><select id="a_side"><option value="right">Right</option><option value="left">Left</option></select></div>
+      <div class="field"><label>Age (months)</label><input type="number" id="a_age" /></div>
+      <div class="field"><label>Sex</label><select id="a_sex"><option value="F">F</option><option value="M">M</option><option value="other">Other</option></select></div>
+      <div class="field"><label>Months since surgery</label><input type="number" id="a_monthsSinceSurgery" /></div>
+      <div class="field"><label>Clinician name</label><input type="text" id="a_clinicianName" /></div>
+      <div class="field"><label>Hospital</label><input type="text" id="a_hospital" placeholder="e.g. CMC Vellore" /></div>
+    </div>
+    <h3 style="font-size:13px; color:var(--slate); text-transform:uppercase; letter-spacing:.06em; margin:20px 0 10px;">Range of motion (degrees)</h3>
+    <div class="field-grid">
+      <div class="field"><label>Shoulder abduction</label><input type="number" id="a_shoulderAbduction" /></div>
+      <div class="field"><label>Shoulder flexion</label><input type="number" id="a_shoulderFlexion" /></div>
+      <div class="field"><label>External rotation</label><input type="number" id="a_externalRotation" /></div>
+      <div class="field"><label>Internal rotation</label><input type="number" id="a_internalRotation" /></div>
+      <div class="field"><label>Total ROM</label><input type="number" id="a_rom" /></div>
+    </div>
+    <h3 style="font-size:13px; color:var(--slate); text-transform:uppercase; letter-spacing:.06em; margin:20px 0 10px;">Clinical scores</h3>
+    <div class="field-grid">
+      <div class="field"><label>Mallet — global abduction (1-5)</label><input type="number" id="a_mallet_abd" min="1" max="5" /></div>
+      <div class="field"><label>Mallet — global ext. rotation (1-5)</label><input type="number" id="a_mallet_er" min="1" max="5" /></div>
+      <div class="field"><label>Mallet — hand to neck (1-5)</label><input type="number" id="a_mallet_neck" min="1" max="5" /></div>
+      <div class="field"><label>Mallet — hand to spine (1-5)</label><input type="number" id="a_mallet_spine" min="1" max="5" /></div>
+      <div class="field"><label>Mallet — hand to mouth (1-5)</label><input type="number" id="a_mallet_mouth" min="1" max="5" /></div>
+      <div class="field"><label>AMS score</label><input type="number" id="a_ams" /></div>
+    </div>
+    <div class="field">
+      <label>Other scores (JSON, optional)</label>
+      <textarea id="a_otherScores" rows="2" placeholder='{"customScore": 7}'></textarea>
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="a_notes" rows="3"></textarea>
+    </div>
+    <button class="btn primary" id="submitAssessmentBtn">Save assessment</button>
+    <p id="assessmentStatus" class="flag" style="margin-top:10px;"></p>
+  </section>
+
+  <!-- Datasets -->
+  <section id="tab-datasets" class="panel panel-pad hidden">
+    <h2 style="font-size:16px; margin-bottom:16px;">Validation Datasets</h2>
+    <div class="field-grid" style="margin-bottom:14px;">
+      <div class="field"><label>Name</label><input type="text" id="d_name" placeholder="e.g. Pilot Cohort A" /></div>
+      <div class="field"><label>Type</label>
+        <select id="d_type">
+          <option value="pilot">pilot</option>
+          <option value="training">training</option>
+          <option value="validation">validation</option>
+          <option value="hospital">hospital</option>
+          <option value="research">research</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn primary" id="createDatasetBtn">Create dataset</button>
+    <p id="datasetStatus" class="flag" style="margin-top:10px;"></p>
+    <div id="datasetList" style="margin-top:20px;"></div>
+  </section>
+
+  <!-- Run Validation / Dashboard -->
+  <section id="tab-validation" class="hidden">
+    <div class="panel panel-pad" style="margin-bottom:20px;">
+      <div class="field-grid">
+        <div class="field"><label>Dataset (optional — blank = all sessions)</label><select id="v_datasetId"><option value="">All sessions</option></select></div>
+      </div>
+      <button class="btn primary" id="runValidationBtn">Run validation</button>
+    </div>
+    <div id="validationResults"></div>
+  </section>
+
+  <!-- Reports -->
+  <section id="tab-reports" class="hidden">
+    <div id="reportsList" class="panel panel-pad" style="margin-bottom:16px;"></div>
+    <div id="reportView" class="panel hidden"></div>
+  </section>
+</div>
+
+<script src="../shared/config.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

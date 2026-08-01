@@ -1,0 +1,94 @@
+{
+  "version": "1.0.0",
+  "notes": "Initial ICQA thresholds. These are documented starting defaults chosen from standard CV/photography heuristics and this project's own reasoning (see docs/icqa.md) -- NOT derived from a formal usability study on the actual patient population. Expect to retune via a new published version once real capture sessions are reviewed.",
+
+  "cameraGeometry": {
+    "minLandmarkVisibility": 0.5,
+    "distance": {
+      "tooCloseMinHeightFrac": 0.95,
+      "tooFarMaxHeightFrac": 0.45,
+      "edgeMarginFrac": 0.02
+    },
+    "tiltIdealMaxDeg": 10,
+    "tiltHardMaxDeg": 25,
+    "rollIdealMaxDeg": 8,
+    "rollHardMaxDeg": 20,
+    "heightAngleIdealMaxDeviation": 0.15,
+    "heightAngleHardMaxDeviation": 0.5
+  },
+
+  "visibility": {
+    "occlusionVisibilityThreshold": 0.5
+  },
+
+  "frameQuality": {
+    "lighting": {
+      "meanMin": 60,
+      "meanMax": 200,
+      "meanHardMin": 25,
+      "meanHardMax": 245,
+      "overExposedMaxFraction": 0.05,
+      "overExposedHardMaxFraction": 0.2,
+      "underExposedMaxFraction": 0.05,
+      "underExposedHardMaxFraction": 0.2,
+      "minContrast": 15,
+      "hardMinContrast": 6
+    },
+    "sharpness": {
+      "minLaplacianVariance": 40,
+      "hardMinLaplacianVariance": 8
+    },
+    "background": {
+      "maxEdgeDensity": 0.35,
+      "hardMaxEdgeDensity": 0.6
+    }
+  },
+
+  "stability": {
+    "maxJitter": 0.01,
+    "hardMaxJitter": 0.04
+  },
+
+  "subscores": {
+    "cameraPosition": { "label": "Camera Position", "weight": 0.18 },
+    "lighting": { "label": "Lighting", "weight": 0.14 },
+    "bodyVisibility": { "label": "Body Visibility", "weight": 0.18 },
+    "poseReadiness": { "label": "Pose Readiness", "weight": 0.12 },
+    "backgroundQuality": { "label": "Background Quality", "weight": 0.08 },
+    "trackingStability": { "label": "Tracking Stability", "weight": 0.12 },
+    "occlusionScore": { "label": "Occlusion Score", "weight": 0.1 },
+    "movementReadiness": { "label": "Movement Readiness", "weight": 0.08 }
+  },
+
+  "confidenceWeights": {
+    "measured_high": 1.0,
+    "measured_moderate": 0.85,
+    "measured_low": 0.6,
+    "estimated_high": 0.75,
+    "estimated_moderate": 0.55,
+    "estimated_low": 0.3,
+    "unavailable": 0
+  },
+
+  "gating": {
+    "cameraPosition": { "required": true, "minScore": 55 },
+    "lighting": { "required": true, "minScore": 50 },
+    "bodyVisibility": { "required": true, "minScore": 60 },
+    "poseReadiness": { "required": true, "minScore": 55 },
+    "backgroundQuality": { "required": false, "minScore": 40 },
+    "trackingStability": { "required": true, "minScore": 50 },
+    "occlusionScore": { "required": true, "minScore": 55 },
+    "movementReadiness": { "required": false, "minScore": 45 }
+  },
+
+  "guidance": {
+    "warnBelowScore": 70
+  },
+
+  "timeline": {
+    "sampleIntervalMs": 500,
+    "autoPauseCqiThreshold": 35,
+    "autoPauseConsecutiveSamples": 3,
+    "warnCqiThreshold": 55
+  }
+}

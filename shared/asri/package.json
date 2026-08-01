@@ -1,0 +1,6 @@
+{
+  "name": "shoulder-rom-asri",
+  "private": true,
+  "type": "module",
+  "description": "Scopes ES module resolution to this directory, matching shared/biomechanics/. backend/server.js (CommonJS) consumes this via a dynamic import() during its async bootstrap; the browser uses <script type=\"module\"> in capture/index.html."
+}

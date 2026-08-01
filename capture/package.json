@@ -1,0 +1,6 @@
+{
+  "name": "shoulder-rom-capture",
+  "private": true,
+  "type": "module",
+  "description": "Scopes ES module resolution to this directory (pose-engine.js and app.js use import/export; browsers use each <script type=\"module\"> tag instead of this file, which only matters for `node --check`)."
+}
