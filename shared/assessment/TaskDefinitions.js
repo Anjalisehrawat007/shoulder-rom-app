@@ -50,6 +50,10 @@ const TASKS = [
     supportingMeasurements: ["elbowFlexionDeg", "trunkCompensationFlag", "movementSmoothness"],
     recordedCriteria: ["External Rotation", "Elbow Position", "Compensation", "Movement Smoothness", "CQI", "Confidence"],
     usesExistingAlgorithmUnchanged: "shared/biomechanics/angle-computation.js computeAxialRotation() -- not modified this phase.",
+    // Elbow pinned at the side: the wrist orbits the ELBOW, not the shoulder,
+    // so its linear speed is roughly half that of a shoulder-radius sweep.
+    // See shared/motion/segmentation.js SEGMENTATION_PROFILES.
+    segmentationProfile: "lowAmplitudeRotational",
   },
   {
     id: "hand_to_neck",
@@ -79,6 +83,10 @@ const TASKS = [
     supportingMeasurements: ["shoulderExtensionDeg", "internalRotationDeg", "trunkCompensationFlag", "movementSmoothness"],
     recordedCriteria: ["Estimated Vertebral Level", "Shoulder Extension", "Internal Rotation", "Trunk Compensation", "Smoothness", "CQI", "Confidence"],
     usesExistingAlgorithmUnchanged: "internalRotationDeg reused as supporting context only -- not this task's primary measurement.",
+    // Short excursion behind the trunk, dominated by internal rotation rather
+    // than a large shoulder-radius sweep -- same small effective radius as the
+    // two rotation tasks. See shared/motion/segmentation.js.
+    segmentationProfile: "lowAmplitudeRotational",
   },
   {
     id: "hand_to_mouth",
@@ -108,6 +116,9 @@ const TASKS = [
     supportingMeasurements: ["trunkCompensationFlag", "movementSmoothness"],
     recordedCriteria: ["Internal Rotation", "Compensation", "Movement Smoothness", "CQI", "Confidence"],
     usesExistingAlgorithmUnchanged: "shared/biomechanics/angle-computation.js computeAxialRotation() -- not modified this phase.",
+    // Elbow pinned at the side, forearm rotating about its own long axis --
+    // the smallest wrist excursion in the protocol. See shared/motion/segmentation.js.
+    segmentationProfile: "lowAmplitudeRotational",
   },
 ];
 

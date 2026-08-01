@@ -168,6 +168,81 @@ async function main() {
   const icqaConfigStore = new IcqaVersionedConfigStore();
   const malletScoreConfigStore = new MalletVersionedConfigStore();
 
+  /**
+   * THE single authoritative source of a session's ASRI result.
+   *
+   * Previously three call sites disagreed: /unlock computed AND persisted,
+   * buildMalletReport() computed but never persisted (so it silently produced
+   * a second, unrecorded evaluation), and the research-report route only ever
+   * SELECTed from asri_computations -- so a session that had never been opened
+   * in the doctor portal reported `asri: null` in its research report while
+   * the dashboard showed a real composite for the very same session. Live
+   * execution isolated it exactly: before unlock `asri = null` with 0 rows,
+   * after unlock `composite = 69` with 1 row, nothing else changed.
+   *
+   * Resolution order, and why:
+   *  1. If a persisted row exists, return it verbatim. ASRI config and
+   *     reference-dataset versions are immutable once published, so a stored
+   *     result IS the score the clinician originally saw. Recomputing could
+   *     only ever reproduce it or, if the underlying rows were later amended,
+   *     silently contradict the record. Existing sessions therefore keep
+   *     byte-identical values -- this is what makes the change backward
+   *     compatible.
+   *  2. Otherwise compute it once, using the session's own captured versions
+   *     (not the latest), persist it, and return it. Persisting here is what
+   *     removes the ordering dependency on the doctor portal: whichever
+   *     surface asks first materialises the record for every other surface.
+   *  3. If the versions or task data needed are absent, return null -- the
+   *     same "insufficient data, do not fabricate" contract used everywhere
+   *     else. Nothing is persisted in that case, so a later request can still
+   *     succeed once the data exists.
+   *
+   * The scoring call itself is unchanged and appears exactly once in the
+   * codebase now; no ASRI mathematics is touched.
+   */
+  function resolveAsriResult(session, perTaskParameters) {
+    const existing = db
+      .prepare("SELECT result_json FROM asri_computations WHERE session_id = ? ORDER BY computed_at DESC LIMIT 1")
+      .get(session.session_id);
+    if (existing) return JSON.parse(existing.result_json);
+
+    const asriConfigRow = db.prepare("SELECT config_json FROM asri_config_versions WHERE version = ?").get(session.asri_version);
+    const referenceConfigRow = session.reference_dataset_version
+      ? db.prepare("SELECT config_json FROM reference_dataset_versions WHERE version = ?").get(session.reference_dataset_version)
+      : null;
+    if (!asriConfigRow || !referenceConfigRow || Object.keys(perTaskParameters).length === 0) return null;
+
+    const engine = new AsriEngine(JSON.parse(asriConfigRow.config_json));
+    const referenceTargets = resolveReferenceDataset(JSON.parse(referenceConfigRow.config_json), {
+      ageMonths: session.age_months,
+      monthsSinceSurgery: session.months_since_surgery,
+      side: session.side,
+      hospitalId: session.hospital_id,
+    }).targets;
+    const asriResult = engine.score({ perTaskParameters, referenceTargets, stage01: session.stage01 });
+
+    db.prepare("INSERT INTO asri_computations (session_id, computed_at, asri_version, result_json) VALUES (?, ?, ?, ?)").run(
+      session.session_id,
+      new Date().toISOString(),
+      session.asri_version,
+      JSON.stringify(asriResult)
+    );
+    return asriResult;
+  }
+
+  /** Same resolver for callers that hold only a session id -- loads the session
+   *  row and its per-task parameters, then delegates. Exists so no route has to
+   *  re-implement that loading step and drift from the others again. */
+  function resolveAsriForSession(sessionId) {
+    const session = db.prepare("SELECT * FROM sessions WHERE session_id = ?").get(sessionId);
+    if (!session) return null;
+    const perTaskParameters = {};
+    for (const row of db.prepare("SELECT task_id, parameters_json FROM task_results WHERE session_id = ?").all(sessionId)) {
+      perTaskParameters[row.task_id] = JSON.parse(row.parameters_json);
+    }
+    return resolveAsriResult(session, perTaskParameters);
+  }
+
   // ---- config bootstrap -----------------------------------------------------
   // On boot, load config/asri-config*.json into asri_config_versions,
   // config/reference-datasets*.json into reference_dataset_versions, and
@@ -546,34 +621,11 @@ async function main() {
       photoUrl: `/api/captures/${c.capture_id}/photo?reviewToken=${reviewToken}`,
     }));
 
-    // Score using the ASRI + reference-dataset versions that were ACTIVE when
-    // this session was captured, not necessarily the latest -- both are
-    // immutable once published, so this reproduces exactly what the clinician
-    // would have seen originally (spec: reproducibility).
-    let asriResult = null;
-    const asriConfigRow = db.prepare("SELECT config_json FROM asri_config_versions WHERE version = ?").get(session.asri_version);
-    const referenceConfigRow = session.reference_dataset_version
-      ? db.prepare("SELECT config_json FROM reference_dataset_versions WHERE version = ?").get(session.reference_dataset_version)
-      : null;
-
-    if (asriConfigRow && referenceConfigRow && Object.keys(perTaskParameters).length > 0) {
-      const engine = new AsriEngine(JSON.parse(asriConfigRow.config_json));
-      const referenceConfig = JSON.parse(referenceConfigRow.config_json);
-      const referenceTargets = resolveReferenceDataset(referenceConfig, {
-        ageMonths: session.age_months,
-        monthsSinceSurgery: session.months_since_surgery,
-        side: session.side,
-        hospitalId: session.hospital_id,
-      }).targets;
-      asriResult = engine.score({ perTaskParameters, referenceTargets, stage01: session.stage01 });
-
-      db.prepare("INSERT INTO asri_computations (session_id, computed_at, asri_version, result_json) VALUES (?, ?, ?, ?)").run(
-        session.session_id,
-        new Date().toISOString(),
-        session.asri_version,
-        JSON.stringify(asriResult)
-      );
-    }
+    // Scored via resolveAsriResult(): the session's own captured ASRI +
+    // reference-dataset versions (immutable once published), reused from the
+    // persisted row when one already exists so repeat unlocks cannot produce a
+    // second, differing evaluation.
+    const asriResult = resolveAsriResult(session, perTaskParameters);
 
     res.json({
       session: {
@@ -762,22 +814,10 @@ async function main() {
       gradeOverrides[row.task_id] = { clinicianGrade: row.clinician_grade, overrideReason: row.override_reason, clinicianName: row.clinician_name, createdAt: row.created_at };
     }
 
-    let asriResult = null;
-    const asriConfigRow = db.prepare("SELECT config_json FROM asri_config_versions WHERE version = ?").get(session.asri_version);
-    const referenceConfigRow = session.reference_dataset_version
-      ? db.prepare("SELECT config_json FROM reference_dataset_versions WHERE version = ?").get(session.reference_dataset_version)
-      : null;
-    if (asriConfigRow && referenceConfigRow && Object.keys(perTaskParameters).length > 0) {
-      const engine = new AsriEngine(JSON.parse(asriConfigRow.config_json));
-      const referenceConfig = JSON.parse(referenceConfigRow.config_json);
-      const referenceTargets = resolveReferenceDataset(referenceConfig, {
-        ageMonths: session.age_months,
-        monthsSinceSurgery: session.months_since_surgery,
-        side: session.side,
-        hospitalId: session.hospital_id,
-      }).targets;
-      asriResult = engine.score({ perTaskParameters, referenceTargets, stage01: session.stage01 });
-    }
+    // Same authoritative resolver the unlock route uses. This previously
+    // computed a parallel, unpersisted result, which is how the Mallet report
+    // and the research report could disagree about one session's ASRI.
+    const asriResult = resolveAsriResult(session, perTaskParameters);
 
     const malletGrades = Object.values(taskResults).map((t) => t.malletGrade).filter(Boolean);
     const malletOverallResult = malletScoreConfigStore.activeVersion
@@ -1412,8 +1452,9 @@ async function main() {
       const params = taskRow ? JSON.parse(taskRow.parameters_json) : null;
       originalValue = params?.[o.fieldKey] ?? null;
     } else {
-      const asriRow = db.prepare("SELECT result_json FROM asri_computations WHERE session_id = ? ORDER BY computed_at DESC LIMIT 1").get(req.params.sessionId);
-      const asri = asriRow ? JSON.parse(asriRow.result_json) : null;
+      // Shared resolver, so a session-level override snapshots a real original
+      // value instead of null merely because nobody had opened the portal yet.
+      const asri = resolveAsriForSession(req.params.sessionId);
       originalValue = asri?.[o.fieldKey] ?? null;
     }
 
@@ -1605,8 +1646,7 @@ async function main() {
     // recent ASRI computation where available.
     const latestAssessment = db.prepare("SELECT * FROM clinician_assessments WHERE session_id = ? ORDER BY created_at DESC LIMIT 1").get(sessionId);
     if (latestAssessment) {
-      const asriRow = db.prepare("SELECT result_json FROM asri_computations WHERE session_id = ? ORDER BY computed_at DESC LIMIT 1").get(sessionId);
-      const asri = asriRow ? JSON.parse(asriRow.result_json) : null;
+      const asri = resolveAsriForSession(sessionId);
       rows.push({
         field: "overallAssessment",
         taskId: null,
@@ -1649,12 +1689,18 @@ async function main() {
     for (const o of bundle.malletOverrides) {
       gradeOverrides[o.task_id] = { clinicianGrade: o.clinician_grade, overrideReason: o.override_reason, clinicianName: o.clinician_name, createdAt: o.created_at };
     }
-    const asriRow = db.prepare("SELECT result_json FROM asri_computations WHERE session_id = ? ORDER BY computed_at DESC LIMIT 1").get(sessionId);
+    // Was a bare SELECT, which returned null for any session never opened in
+    // the doctor portal -- the research report then silently omitted ASRI for
+    // exactly the sessions a cohort export is most likely to touch. Routed
+    // through the shared resolver, which materialises the record on first
+    // access and reuses the persisted row thereafter.
+    const perTaskParameters = {};
+    for (const [taskId, t] of Object.entries(taskResults)) perTaskParameters[taskId] = t.parameters;
 
     return generateResearchReport({
       session: { sessionId: session.session_id, patientLabel: session.patient_label, side: session.side, createdAt: session.created_at, protocol: session.protocol },
       taskResults,
-      asriResult: asriRow ? JSON.parse(asriRow.result_json) : null,
+      asriResult: resolveAsriResult(session, perTaskParameters),
       malletOverallResult: bundle.malletOverall,
       gradeOverrides,
       taskLabels,

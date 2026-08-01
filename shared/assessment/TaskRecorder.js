@@ -83,7 +83,13 @@ function recordTask({ task, side, rawFrames, collected, icqaResult, malletScoreE
 
   const isRight = side === "right";
   const filtered = filterLandmarkSequence(rawFrames);
-  const dmqe = runDmqe(filtered, side, rawFrames);
+  // Segmentation thresholds are selected per task class, not per call site:
+  // the rotation/spine tasks move the wrist on a ~2x smaller radius than the
+  // shoulder-sweep tasks, so a single linear-speed floor cannot serve both.
+  // Tasks without the field fall through to the "standard" profile, i.e. the
+  // historical thresholds. Only movement DETECTION is affected; no DMQE
+  // scoring mathematics reads this.
+  const dmqe = runDmqe(filtered, side, rawFrames, { segmentationProfile: task.segmentationProfile });
 
   // Phase 8: full-sequence rotation analysis, integrated after being built
   // as a standalone module in Phase 7 -- see rotation-trajectory.js's file
@@ -153,8 +159,8 @@ function recordTask({ task, side, rawFrames, collected, icqaResult, malletScoreE
 
   const motionAnalysis =
     dmqe.status === "ok"
-      ? { status: dmqe.status, dmqeScore: dmqe.dmqeScore, movementConfidencePct: dmqe.movementConfidencePct, segmentation: dmqe.segmentation, domains: dmqe.domains, contributions: dmqe.contributions, dmqeVersion: DMQE_ENGINE_VERSION, filterVersion: FILTER_VERSION }
-      : { status: dmqe.status, dmqeVersion: DMQE_ENGINE_VERSION, filterVersion: FILTER_VERSION };
+      ? { status: dmqe.status, dmqeScore: dmqe.dmqeScore, movementConfidencePct: dmqe.movementConfidencePct, segmentation: dmqe.segmentation, domains: dmqe.domains, contributions: dmqe.contributions, dmqeVersion: DMQE_ENGINE_VERSION, filterVersion: FILTER_VERSION, segmentationProfile: dmqe.segmentationProfile, segmentationProfileVersion: dmqe.segmentationProfileVersion }
+      : { status: dmqe.status, dmqeVersion: DMQE_ENGINE_VERSION, filterVersion: FILTER_VERSION, segmentationProfile: dmqe.segmentationProfile, segmentationProfileVersion: dmqe.segmentationProfileVersion };
 
   return {
     status: "ok",

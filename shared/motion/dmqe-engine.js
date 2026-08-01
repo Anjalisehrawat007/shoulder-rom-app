@@ -40,7 +40,7 @@
 import { makeParameter } from "../biomechanics/parameter-schema.js";
 import { vec3 } from "../biomechanics/coordinate-frame.js";
 import { LM } from "../biomechanics/index.js";
-import { segmentMovement } from "./segmentation.js";
+import { segmentMovement, resolveSegmentationProfile, SEGMENTATION_PROFILE_VERSION } from "./segmentation.js";
 import { analyzeTrajectory } from "./trajectory-analysis.js";
 
 // Phase 4 addition (Part 8, dataset metadata): a simple version string, not a
@@ -170,10 +170,20 @@ function detectPauses(speeds, phases, noiseFloor, minRunFrames) {
  *   an actual detection vs. a filter-reconstructed value, folded into
  *   movementConfidencePct below. Optional: if omitted, data completeness is
  *   assumed 100% (e.g. when a caller only has the filtered sequence).
+ * @param {object} [options]
+ * @param {string} [options.segmentationProfile] - name of a
+ *   shared/motion/segmentation.js profile ("standard" |
+ *   "lowAmplitudeRotational"). Selects the movement-detection thresholds only;
+ *   no DMQE scoring mathematics depends on it. Omitted / unknown => "standard",
+ *   which is the historical behaviour, so every existing call site is
+ *   unaffected.
  */
-function runDmqe(filteredFrames, side, rawFrames = null) {
+function runDmqe(filteredFrames, side, rawFrames = null, { segmentationProfile } = {}) {
   const wristIndex = side === "right" ? LM.R_WRIST : LM.L_WRIST;
-  const segmentation = segmentMovement(filteredFrames, { wristIndex });
+  const segmentation = segmentMovement(filteredFrames, {
+    wristIndex,
+    opts: resolveSegmentationProfile(segmentationProfile),
+  });
   if (segmentation.status !== "ok") {
     return {
       dmqeScore: null,
@@ -181,6 +191,10 @@ function runDmqe(filteredFrames, side, rawFrames = null) {
       status: segmentation.status,
       domains: {},
       contributions: [],
+      // Carried on the failure path too: a `no_movement_detected` result is
+      // only interpretable if you know which thresholds rejected it.
+      segmentationProfile: segmentationProfile || "standard",
+      segmentationProfileVersion: SEGMENTATION_PROFILE_VERSION,
     };
   }
 
@@ -305,6 +319,8 @@ function runDmqe(filteredFrames, side, rawFrames = null) {
     trajectory,
     domains,
     contributions,
+    segmentationProfile: segmentationProfile || "standard",
+    segmentationProfileVersion: SEGMENTATION_PROFILE_VERSION,
   };
 }
 
