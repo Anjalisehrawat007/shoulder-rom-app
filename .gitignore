@@ -1,7 +1,21 @@
 backend/node_modules/
-backend/data/*.sqlite
-backend/data/*.sqlite-*
-backend/data/captures/
+node_modules/
+
+# Runtime patient data. This directory holds captured photos, recorded task
+# video, and landmark sequences stored under the patient's 7-digit hospital
+# registration number -- identifiable clinical data that must never enter git
+# history, public or private. The whole directory is excluded rather than
+# individual file patterns, so a new artifact type added under backend/data/
+# later (as task-data/ was) is covered by default instead of silently becoming
+# committable.
+backend/data/
+
 .DS_Store
 **/.DS_Store
-node_modules/
+
+# Deploy-tool local state (contains site/project ids, not source)
+.netlify/
+.vercel/
+.env
+.env.*
+!.env.example
